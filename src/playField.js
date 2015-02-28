@@ -28,10 +28,14 @@ var isOverlapping = (g1, g2) =>
   ) !== undefined
 
 var collidesWithBottomIfMovesDown = (playField) => playField.last().some((cell) => cell !== EMPTY_CELL)
-
+var collidesWithWallIfMovesLeft = (playField) => playField.map((row) => row.first()).some((cell) => cell !== EMPTY_CELL)
+var collidesWithWallIfMovesRight = (playField) => playField.map((row) => row.last()).some((cell) => cell !== EMPTY_CELL)
 var canMoveDown = (playField, environment) =>
   !collidesWithBottomIfMovesDown(playField) && !isOverlapping(nudgeDown(playField), environment)
-
+var canMoveLeft = (playField, environment) =>
+  !collidesWithWallIfMovesLeft(playField) && !isOverlapping(nudgeLeft(playField), environment)
+var canMoveRight = (playField, environment) =>
+  !collidesWithWallIfMovesRight(playField) && !isOverlapping(nudgeRight(playField), environment)
 
 var moveDown = function(state) {
   var playField = state.get('playField')
@@ -64,20 +68,20 @@ var drop = function(state) {
 
 var moveLeft = function(state) {
   var playField = state.get('playField')
-  var collidesWithWall = playField.map((row) => row.first()).some((cell) => cell !== EMPTY_CELL)
-  if (collidesWithWall) {
-    return state
-  } else {
+  var env = state.get('environment')
+  if (canMoveLeft(playField, env)) {
     return state.set('playField', nudgeLeft(playField))
+  } else {
+    return state
   }
 }
 var moveRight = function(state) {
   var playField = state.get('playField')
-  var collidesWithWall = playField.map((row) => row.last()).some((cell) => cell !== EMPTY_CELL)
-  if (collidesWithWall) {
-    return state
-  } else {
+  var env = state.get('environment')
+  if (canMoveRight(playField, env)) {
     return state.set('playField', nudgeRight(playField))
+  } else {
+    return state
   }
 }
 var pressedInput = (inputType) =>
