@@ -17,6 +17,8 @@ var foldGrids = (g1, g2) =>
   )
 
 var nudgeDown = (playField) => List.of(EMPTY_ROW).concat(playField.slice(0, 19))
+var nudgeRight = (playField) => playField.map((row) => List.of(EMPTY_CELL).concat(row.remove(-1)))
+var nudgeLeft = (playField) => playField.map((row) => row.slice(1).push(EMPTY_CELL))
 
 var isOverlapping = (g1, g2) =>
   g1.find((row, rowIndex) =>
@@ -64,18 +66,18 @@ var moveLeft = function(state) {
   var playField = state.get('playField')
   var collidesWithWall = playField.map((row) => row.first()).some((cell) => cell !== EMPTY_CELL)
   if (collidesWithWall) {
-    return state.set('playField', playField).set('actions', List.of())
+    return state
   } else {
-    return state.set('playField', playField.map((row) => row.slice(1).push(EMPTY_CELL)))
+    return state.set('playField', nudgeLeft(playField))
   }
 }
 var moveRight = function(state) {
   var playField = state.get('playField')
   var collidesWithWall = playField.map((row) => row.last()).some((cell) => cell !== EMPTY_CELL)
   if (collidesWithWall) {
-    return state.set('playField', playField).set('actions', List.of())
+    return state
   } else {
-    return state.set('playField', playField.map((row) => List.of(EMPTY_CELL).concat(row.remove(-1))))
+    return state.set('playField', nudgeRight(playField))
   }
 }
 var pressedInput = (inputType) =>
