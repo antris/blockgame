@@ -4,7 +4,7 @@ var Bacon = require('baconjs')
 var NextPiecesView = require('./views/nextPiecesView')
 var playFieldStream = require('./playField')
 var PlayField = require('./views/playFieldView')
-
+var input = require('./input')
 var worldStream = Bacon.combineTemplate({
   currentPiece,
   nextPieces,
