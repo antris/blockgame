@@ -146,7 +146,10 @@ var applyAction = function(previousState, a) {
   }
 }
 
-var tick = actionStream.scan(INITIAL_STATE, applyAction).map(removeCompleteLines)
+var nextTick = (previousState, a) =>
+  removeCompleteLines(applyAction(previousState, a))
+
+var tick = actionStream.scan(INITIAL_STATE, nextTick)
 
 tick.filter((state) => state.get('actions').contains("NEXT_PIECE")).onValue(next)
 

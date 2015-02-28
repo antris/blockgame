@@ -26,6 +26,6 @@ var inputStream = Bacon.combineTemplate({
   x: isPressed(X)
 }).map(Immutable.Map)
 
-keyDowns.onValue((x) => console.log(x))
+//keyDowns.onValue((x) => console.log(x))
 
 module.exports = inputStream
