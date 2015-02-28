@@ -25,14 +25,16 @@ var isOverlapping = (g1, g2) =>
     )
   ) !== undefined
 
+var collidesWithBottomIfMovesDown = (playField) => playField.last().some((cell) => cell !== EMPTY_CELL)
+
 var canMoveDown = (playField, environment) =>
-  !isOverlapping(nudgeDown(playField), environment)
+  !collidesWithBottomIfMovesDown(playField) && !isOverlapping(nudgeDown(playField), environment)
+
 
 var moveDown = function(state) {
   var playField = state.get('playField')
   var env = state.get('environment')
-  var collidesWithBottom = playField.last().some((cell) => cell !== EMPTY_CELL)
-  if (collidesWithBottom) {
+  if (collidesWithBottomIfMovesDown(playField)) {
     return state
       .set('playField', EMPTY_GRID)
       .set('environment', foldGrids(env, playField))
@@ -47,6 +49,15 @@ var moveDown = function(state) {
         .set('actions', List.of("NEXT_PIECE"))
     }
   }
+}
+
+var drop = function(state) {
+  var playField = state.get('playField')
+  var env = state.get('environment')
+  while (canMoveDown(playField, env)) {
+    playField = nudgeDown(playField)
+  }
+  return state.set('playField', playField)
 }
 
 var moveLeft = function(state) {
@@ -123,8 +134,7 @@ var applyAction = function(previousState, a) {
     case "MOVE_PIECE_RIGHT":
       return moveRight(state)
     case "DROP_PIECE":
-      console.log('drop piece')
-      return state
+      return drop(state)
   }
 }
 
