@@ -3,10 +3,9 @@ var Immutable = require('immutable')
 var {nextPieces, currentPiece, next} = require('./nextPiece')
 var Bacon = require('baconjs')
 var NextPiecesView = require('./views/nextPiecesView')
-var {playFieldStream} = require('./playField')
+var {playFieldStream, environmentStream} = require('./playField')
 var PlayField = require('./views/playFieldView')
 var input = require('./input')
-var environmentStream = require('./environment')
 var worldStream = Bacon.combineTemplate({
   currentPiece,
   nextPieces,

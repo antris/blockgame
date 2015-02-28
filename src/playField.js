@@ -5,42 +5,46 @@ var pieces = require('./pieces')
 var inputStream = require('./input')
 var EMPTY_CELL = 0
 var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
-var EMPTY_PLAY_FIELD = Immutable.Map({ playField: Immutable.Repeat(EMPTY_ROW, 20), actions: List.of() })
+var EMPTY_GRID = Immutable.Repeat(EMPTY_ROW, 20).toList()
+var INITIAL_STATE = Immutable.Map({ environment: EMPTY_GRID, playField: EMPTY_GRID, actions: List.of() })
 var {currentPiece, next} = require('./nextPiece')
 
-var moveDown = function(playField) {
+var foldGrids = (g1, g2) =>
+  g1.map((row, rowIndex) =>
+      row.map((cell, cellIndex) =>
+          Math.max(cell, g2.get(rowIndex).get(cellIndex))
+      )
+  )
+
+var moveDown = function(state) {
+  var playField = state.get('playField')
   var collidesWithBottom = playField.last().some((cell) => cell !== EMPTY_CELL)
   if (collidesWithBottom) {
-    return EMPTY_PLAY_FIELD.set("actions", List.of(Immutable.Map({action: "COLLIDED_WITH_BOTTOM", playField })))
+    return state
+      .set('playField', EMPTY_GRID)
+      .set('environment', foldGrids(state.get('environment'), playField))
+      .set('actions', List.of(Immutable.Map({ action: "COLLIDED_WITH_BOTTOM" })))
   } else {
-    return Immutable.Map({ playField: List.of(EMPTY_ROW).concat(playField.slice(0, 19)), actions: List.of() })
+    return state.set('playField', List.of(EMPTY_ROW).concat(playField.slice(0, 19)))
   }
 }
 
-var moveLeft = function(playField) {
+var moveLeft = function(state) {
+  var playField = state.get('playField')
   var collidesWithWall = playField.map((row) => row.first()).some((cell) => cell !== EMPTY_CELL)
   if (collidesWithWall) {
-    return Immutable.Map({ playField, actions: List.of() })
+    return state.set('playField', playField).set('actions', List.of())
   } else {
-    return Immutable.Map({
-      playField: playField.map((row) =>
-          row.slice(1).push(EMPTY_CELL)
-      ),
-      actions: List.of()
-    })
+    return state.set('playField', playField.map((row) => row.slice(1).push(EMPTY_CELL)))
   }
 }
-var moveRight = function(playField) {
+var moveRight = function(state) {
+  var playField = state.get('playField')
   var collidesWithWall = playField.map((row) => row.last()).some((cell) => cell !== EMPTY_CELL)
   if (collidesWithWall) {
-    return Immutable.Map({ playField, actions: List.of() })
+    return state.set('playField', playField).set('actions', List.of())
   } else {
-    return Immutable.Map({
-      playField: playField.map((row) =>
-          List.of(EMPTY_CELL).concat(row.remove(-1))
-      ),
-      actions: List.of()
-    })
+    return state.set('playField', playField.map((row) => List.of(EMPTY_CELL).concat(row.remove(-1))))
   }
 }
 var pressedInput = (inputType) =>
@@ -64,9 +68,10 @@ var setLandingSpace = (playField, landingSpace) =>
       .concat(row.slice(7))
   ).concat(playField.slice(2, 20))
 
-var addPieceToPlayField = function(playField, piece) {
+var addPieceToPlayField = function(state, piece) {
+  var playField = state.get('playField')
   var landingSpace = addPieceToLandingSpace(getLandingSpace(playField), piece)
-  return Immutable.Map({ playField: setLandingSpace(playField, landingSpace), actions: List.of() })
+  return state.set('playField', setLandingSpace(playField, landingSpace)).set('actions', List.of())
 }
 
 var gravity = Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" })
@@ -79,21 +84,22 @@ var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", p
   .merge(gravity)
 
 var applyAction = function(previousState, a) {
+  var state = previousState.set('actions', List.of())
   switch (a.action) {
     case "NEW_PIECE":
-      return addPieceToPlayField(previousState.get('playField'), a.piece)
+      return addPieceToPlayField(state, a.piece)
     case "MOVE_PIECE_DOWN":
-      return moveDown(previousState.get('playField'))
+      return moveDown(state)
     case "MOVE_PIECE_LEFT":
-      return moveLeft(previousState.get('playField'))
+      return moveLeft(state)
     case "MOVE_PIECE_RIGHT":
-      return moveRight(previousState.get('playField'))
+      return moveRight(state)
     case "DROP_PIECE":
       console.log('drop piece')
-      return previousState
+      return state
   }
 }
-var tick = actionStream.scan(EMPTY_PLAY_FIELD, applyAction)
+var tick = actionStream.scan(INITIAL_STATE, applyAction)
 
 var freezeStream = tick.flatMap((t) =>
   Bacon.fromArray(t.get('actions').filter((a) => a.get('action') === "COLLIDED_WITH_BOTTOM").map((a) => a.get('playField')).toArray())
@@ -101,7 +107,8 @@ var freezeStream = tick.flatMap((t) =>
 
 freezeStream.onValue(next)
 
+
 module.exports = {
   playFieldStream: tick.map((x) => x.get('playField')),
-  freezeStream
+  environmentStream: tick.map((x) => x.get('environment'))
 }
