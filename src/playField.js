@@ -6,28 +6,7 @@ var inputStream = require('./input')
 
 var EMPTY_ROW  = List.of(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-var initialPlayField = List.of(
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW,
-  EMPTY_ROW
-)
+var initialPlayField = Immutable.Repeat(EMPTY_ROW, 20)
 
 var moveDown = (playField) => List.of(EMPTY_ROW).concat(playField.slice(0, 20))
 
