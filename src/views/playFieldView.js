@@ -1,14 +1,25 @@
 var React = require('react')
 
+var colors = {
+  0: 'black',
+  1: 'red',
+  2: 'yellow',
+  3: 'cyan',
+  4: 'purple',
+  5: 'green',
+  6: 'blue',
+  7: 'orange'
+}
+
 var Cell = React.createClass({
   render: function(){
     var style = {
       display: "inline-block",
       width: "20px",
       height: "20px",
-      backgroundColor: this.props.cellType === 0 ? "#000000" : "#ffffff"
+      backgroundColor: colors[this.props.cellType]
     }
-    return <span style={style}>{this.props.cellType}</span>
+    return <span style={style}></span>
   }
 })
 
