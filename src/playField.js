@@ -92,18 +92,18 @@ var pressedInput = (inputType) =>
     .filter((isPressed) => isPressed)
 
 var newPiece = currentPiece.map((x) => x.get('piece')).toEventStream()
-var getLandingSpace = (playField) => playField.slice(0, 2).map((row) => row.slice(3, 7))
+var getLandingSpace = (playField) => playField.slice(0, 4).map((row) => row.slice(3, 7))
 var addPieceToLandingSpace = (landingSpace, piece) => landingSpace.map((row, rowIndex) =>
   row.map(function(cell, cellIndex) {
     return piece.get(rowIndex).get(cellIndex) === 0 ? cell : piece.get(rowIndex).get(cellIndex)
   })
 )
 var setLandingSpace = (playField, landingSpace) =>
-  playField.slice(0, 2).map((row, rowIndex) =>
+  playField.slice(0, 4).map((row, rowIndex) =>
     row.slice(0, 3)
       .concat(row.slice(3, 7).map((cell, cellIndex) => landingSpace.get(rowIndex).get(cellIndex)))
       .concat(row.slice(7))
-  ).concat(playField.slice(2, 20))
+  ).concat(playField.slice(4, 20))
 
 var addPieceToPlayField = function(state, piece) {
   var playField = state.get('playField')
