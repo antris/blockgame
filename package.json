@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start": "npm install && pushd client; python -m SimpleHTTPServer; popd",
-    "watch": "./node_modules/watchify/bin/cmd.js src/main.js -o client/bundle.js"
+    "watch": "./node_modules/watchify/bin/cmd.js src/main.js --debug -o client/bundle.js"
   },
   "browserify": {
     "transform": [
@@ -14,6 +14,7 @@
     ]
   },
   "dependencies": {
-    "reactify": "^1.0.0"
+    "reactify": "^1.0.0",
+    "immutable": "^3.6.2"
   }
 }
