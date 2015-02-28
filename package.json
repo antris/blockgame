@@ -1,6 +1,19 @@
 {
   "scripts": {
     "start": "npm install && pushd client; python -m SimpleHTTPServer; popd",
-    "watch": "./node_modules/watchify/bin/cmd.js main.js -o client/bundle.js"
+    "watch": "./node_modules/watchify/bin/cmd.js src/main.js -o client/bundle.js"
+  },
+  "browserify": {
+    "transform": [
+      [
+        "reactify",
+        {
+          "es6": true
+        }
+      ]
+    ]
+  },
+  "dependencies": {
+    "reactify": "^1.0.0"
   }
 }
