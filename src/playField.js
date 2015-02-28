@@ -1,13 +1,41 @@
 var Immutable = require('immutable')
 var Bacon = require('baconjs')
-var {List} = Immutable
+var {List, Map} = Immutable
 var pieces = require('./pieces')
 var inputStream = require('./input')
 var EMPTY_CELL = 0
 var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
 var EMPTY_GRID = Immutable.Repeat(EMPTY_ROW, 20).toList()
-var INITIAL_STATE = Immutable.Map({ environment: EMPTY_GRID, playField: EMPTY_GRID, actions: List.of() })
-var {currentPiece, next} = require('./nextPiece')
+var INITIAL_STATE = Immutable.Map({
+  environment: EMPTY_GRID,
+  playField: EMPTY_GRID,
+  actions: List.of()
+})
+
+
+var nextStream = new Bacon.Bus()
+
+var getRandomPiece = () => pieces.asList.get(Math.random() * pieces.asList.size).get(0)
+
+var initialStack = Immutable.List.of(
+  Map({piece: getRandomPiece(), nth: 0}),
+  Map({piece: getRandomPiece(), nth: 1}),
+  Map({piece: getRandomPiece(), nth: 2}),
+  Map({piece: getRandomPiece(), nth: 3}),
+  Map({piece: getRandomPiece(), nth: 4}),
+  Map({piece: getRandomPiece(), nth: 5})
+)
+
+var popStack = function(stack) {
+  return stack.slice(1).concat([Map({ piece: getRandomPiece(), nth: stack.last().get("nth") + 1 })])
+}
+
+var stackStream = nextStream.scan(initialStack, popStack)
+
+var currentPiece = stackStream.map((xs) => xs.first())
+var nextPieces = stackStream.map((xs) => xs.slice(1))
+
+var next = () => nextStream.push(true)
 
 var foldGrids = (g1, g2) =>
   g1.map((row, rowIndex) =>
@@ -158,5 +186,7 @@ tick.filter((state) => state.get('actions').contains("NEXT_PIECE")).onValue(next
 
 module.exports = {
   playFieldStream: tick.map((x) => x.get('playField')),
-  environmentStream: tick.map((x) => x.get('environment'))
+  environmentStream: tick.map((x) => x.get('environment')),
+  nextPieces,
+  currentPiece
 }

@@ -1,9 +1,8 @@
 var React = require('react')
 var Immutable = require('immutable')
-var {nextPieces, currentPiece, next} = require('./nextPiece')
 var Bacon = require('baconjs')
 var NextPiecesView = require('./views/nextPiecesView')
-var {playFieldStream, environmentStream} = require('./playField')
+var {playFieldStream, environmentStream, nextPieces, currentPiece} = require('./playField')
 var PlayField = require('./views/playFieldView')
 var input = require('./input')
 var worldStream = Bacon.combineTemplate({
