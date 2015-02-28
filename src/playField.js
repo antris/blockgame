@@ -6,12 +6,6 @@ var inputStream = require('./input')
 var EMPTY_CELL = 0
 var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
 var EMPTY_GRID = Immutable.Repeat(EMPTY_ROW, 20).toList()
-var INITIAL_STATE = Immutable.Map({
-  environment: EMPTY_GRID,
-  playField: EMPTY_GRID,
-  actions: List.of()
-})
-
 
 var nextStream = new Bacon.Bus()
 
@@ -34,6 +28,32 @@ var stackStream = nextStream.scan(initialStack, popStack)
 
 var currentPiece = stackStream.map((xs) => xs.first())
 var nextPieces = stackStream.map((xs) => xs.slice(1))
+
+var placePieceInGrid = function(grid, pieceRotations, rotation, x, y) {
+  var piece = pieceRotations.get(rotation)
+  var pieceHeight = piece.size
+  var pieceWidth = piece.get(0).size
+  var head = grid.slice(0, y)
+  var body = grid.slice(y, y + pieceHeight).map(function(row, rowIndex) {
+    var rowHead = row.slice(0, x)
+    var rowBody = row.slice(x, x + pieceWidth).map((cell, cellIndex) => Math.max(cell, piece.get(rowIndex).get(cellIndex)))
+    var rowTail = row.slice(x + pieceWidth)
+    return rowHead.concat(rowBody).concat(rowTail)
+  })
+  var tail = grid.slice(y + pieceHeight)
+  return head.concat(body).concat(tail)
+}
+
+var initialState = Immutable.Map({
+  environment: EMPTY_GRID,
+  playField: EMPTY_GRID,
+  actions: List.of(),
+  pieceRotation: 0,
+  pieceX: 0,
+  pieceY: 0
+})
+
+
 
 var next = () => nextStream.push(true)
 
@@ -180,7 +200,7 @@ var nextTick = function(previousState, a) {
   return state
 }
 
-var tick = actionStream.scan(INITIAL_STATE, nextTick)
+var tick = actionStream.scan(initialState, nextTick)
 
 tick.filter((state) => state.get('actions').contains("NEXT_PIECE")).onValue(next)
 
