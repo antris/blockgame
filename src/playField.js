@@ -75,6 +75,7 @@ var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", p
   .merge(pressedInput("down").map(function(){ return { action: "MOVE_PIECE_DOWN" } }))
   .merge(pressedInput("left").map(function(){ return { action: "MOVE_PIECE_LEFT" } }))
   .merge(pressedInput("right").map(function(){ return { action: "MOVE_PIECE_RIGHT" } }))
+  .merge(pressedInput("up").map(function() { return { action: "DROP_PIECE" } }))
   .merge(gravity)
 
 var applyAction = function(previousState, a) {
@@ -87,6 +88,9 @@ var applyAction = function(previousState, a) {
       return moveLeft(previousState.get('playField'))
     case "MOVE_PIECE_RIGHT":
       return moveRight(previousState.get('playField'))
+    case "DROP_PIECE":
+      console.log('drop piece')
+      return previousState
   }
 }
 var tick = actionStream.scan(EMPTY_PLAY_FIELD, applyAction)
