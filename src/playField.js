@@ -146,8 +146,11 @@ var applyAction = function(previousState, a) {
   }
 }
 
-var nextTick = (previousState, a) =>
-  removeCompleteLines(applyAction(previousState, a))
+var nextTick = function(previousState, a) {
+  var state = applyAction(previousState, a)
+  state = removeCompleteLines(state)
+  return state
+}
 
 var tick = actionStream.scan(INITIAL_STATE, nextTick)
 
