@@ -2,12 +2,14 @@ var React = require('react')
 var {nextPieces, currentPiece, next} = require('./nextPiece')
 var Bacon = require('baconjs')
 var NextPiecesView = require('./views/nextPiecesView')
-var playFieldStream = require('./playField')
+var {playFieldStream} = require('./playField')
 var PlayField = require('./views/playFieldView')
 var input = require('./input')
+var environmentStream = require('./environment')
 var worldStream = Bacon.combineTemplate({
   currentPiece,
   nextPieces,
+  environment: environmentStream,
   playField: playFieldStream
 })
 
@@ -15,7 +17,11 @@ var Main = React.createClass({
   render: function() {
     return <div>
       <NextPiecesView pieces={this.props.world.nextPieces} />
-      <PlayField playField={this.props.world.playField} currentPiece={this.props.world.currentPiece} />
+      <PlayField
+        playField={this.props.world.playField}
+        currentPiece={this.props.world.currentPiece}
+        environment={this.props.world.environment}
+      />
     </div>
   }
 })

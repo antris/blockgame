@@ -14,8 +14,16 @@ var Cell = React.createClass({
 
 module.exports = React.createClass({
   render: function() {
+    var env = this.props.environment
     return <div>
-      {this.props.playField.map((row) => <div>{row.map((cell) => <Cell cellType={cell} />).toJS()}</div>).toJS()}
+      {this.props.playField.map((row, rowIndex) =>
+        <div>{
+          row.map(function(cell, cellIndex) {
+            var cellType = Math.max(cell, env.get(rowIndex).get(cellIndex))
+            return <Cell cellType={cellType} />
+          }).toJS()
+        }</div>
+      ).toJS()}
     </div>
   }
 })

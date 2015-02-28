@@ -3,11 +3,18 @@ var Bacon = require('baconjs')
 var {List} = Immutable
 var pieces = require('./pieces')
 var inputStream = require('./input')
+var EMPTY_CELL = 0
+var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10)
+var EMPTY_PLAY_FIELD = Immutable.Map({ playField: Immutable.Repeat(EMPTY_ROW, 20), actions: List.of() })
 
-var EMPTY_ROW  = Immutable.Repeat(0, 10)
-var INITIAL_PLAY_FIELD = Immutable.Repeat(EMPTY_ROW, 20)
-
-var moveDown = (playField) => List.of(EMPTY_ROW).concat(playField.slice(0, 20))
+var moveDown = function(playField) {
+  var collidesWithBottom = playField.last().some((cell) => cell !== EMPTY_CELL)
+  if (collidesWithBottom) {
+    return EMPTY_PLAY_FIELD.set("actions", List.of(Immutable.Map({action: "COLLIDED_WITH_BOTTOM", playField })))
+  } else {
+    return Immutable.Map({ playField: List.of(EMPTY_ROW).concat(playField.slice(0, 19)), actions: List.of() })
+  }
+}
 
 var playerPressedDown = inputStream
   .map((inputs) => inputs.get("down"))
@@ -29,23 +36,30 @@ var setLandingSpace = (playField, landingSpace) =>
 
 var addPieceToPlayField = function(playField, piece) {
   var landingSpace = addPieceToLandingSpace(getLandingSpace(playField), piece)
-  return setLandingSpace(playField, landingSpace)
+  return Immutable.Map({ playField: setLandingSpace(playField, landingSpace), actions: List.of() })
 }
 
-var gravity = newPiece.flatMapLatest(() => Bacon.interval(1000, { transformation: "MOVE_PIECE_DOWN" }))
+var gravity = newPiece.flatMapLatest(() => Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" }))
 
-var playFieldTransformationStream = newPiece.map(function(piece){ return { transformation: "NEW_PIECE", piece } })
-  .merge(playerPressedDown.map(function(){ return { transformation: "MOVE_PIECE_DOWN" } }))
+var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", piece } })
+  .merge(playerPressedDown.map(function(){ return { action: "MOVE_PIECE_DOWN" } }))
   .merge(gravity)
 
-var applyTransformation = function(playField, t) {
-  switch (t.transformation) {
+var applyAction = function(previousState, a) {
+  switch (a.action) {
     case "NEW_PIECE":
-      return addPieceToPlayField(playField, t.piece)
+      return addPieceToPlayField(previousState.get('playField'), a.piece)
     case "MOVE_PIECE_DOWN":
-      return moveDown(playField)
+      return moveDown(previousState.get('playField'))
   }
 }
-var playFieldStream = playFieldTransformationStream.scan(INITIAL_PLAY_FIELD, applyTransformation)
+var tick = actionStream.scan(EMPTY_PLAY_FIELD, applyAction)
 
-module.exports = playFieldStream
+var freezeStream = tick.flatMap((t) =>
+  Bacon.fromArray(t.get('actions').filter((a) => a.get('action') === "COLLIDED_WITH_BOTTOM").map((a) => a.get('playField')).toArray())
+)
+
+module.exports = {
+  playFieldStream: tick.map((x) => x.get('playField')),
+  freezeStream
+}
