@@ -139,33 +139,19 @@ var removeCompleteLines = function(state) {
   return state.set('environment', newEmptyLines.concat(incompleteLines))
 }
 
-var gravity = Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" })
+var gravity = Bacon.interval(1000, (state) => moveDown(state))
 
-var actionStream = pressedInput("down").map(function(){ return { action: "MOVE_PIECE_DOWN" } })
-  .merge(pressedInput("left").map(function(){ return { action: "MOVE_PIECE_LEFT" } }))
-  .merge(pressedInput("right").map(function(){ return { action: "MOVE_PIECE_RIGHT" } }))
-  .merge(pressedInput("up").map(function() { return { action: "DROP_PIECE" } }))
-  .merge(pressedInput("z").map(function() { return { action: "ROTATE_PIECE_LEFT" } }))
-  .merge(pressedInput("x").map(function() { return { action: "ROTATE_PIECE_RIGHT" } }))
+var actionStream = pressedInput("down").map(() => (state) => moveDown(state))
+  .merge(pressedInput("left").map(() => (state) => moveLeft(state)))
+  .merge(pressedInput("right").map(() => (state) => moveRight(state)))
+  .merge(pressedInput("up").map(() => (state) => drop(state)))
   .merge(gravity)
+  //.merge(pressedInput("z").map(function() { return { action: "ROTATE_PIECE_LEFT" } }))
+  //.merge(pressedInput("x").map(function() { return { action: "ROTATE_PIECE_RIGHT" } }))
 
-var applyAction = function(state, a) {
-  switch (a.action) {
-    case "MOVE_PIECE_DOWN":
-      return moveDown(state)
-    case "MOVE_PIECE_LEFT":
-      return moveLeft(state)
-    case "MOVE_PIECE_RIGHT":
-      return moveRight(state)
-    case "DROP_PIECE":
-      return drop(state)
-    default:
-      return state
-  }
-}
 
-var nextTick = function(previousState, a) {
-  var state = applyAction(previousState, a)
+var nextTick = function(state, fn) {
+  var state = fn(state)
   state = removeCompleteLines(state)
   return state
 }
