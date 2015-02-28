@@ -4,7 +4,6 @@ var Bacon = require('baconjs')
 var NextPiecesView = require('./views/nextPiecesView')
 var playFieldStream = require('./playField')
 var PlayField = require('./views/playFieldView')
-Bacon.interval(1000, true).onValue(next)
 
 var worldStream = Bacon.combineTemplate({
   stack: stackStream,
