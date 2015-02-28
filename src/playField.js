@@ -35,7 +35,6 @@ var placePieceInGrid = function(grid, pieceRotations, rotation, x, y) {
 
 var initialState = Immutable.Map({
   environment: EMPTY_GRID,
-  actions: List.of(),
   currentPiece: initialStack.first().get('piece'),
   nextPieces: initialStack.slice(1),
   pieceRotation: 0,
@@ -150,8 +149,7 @@ var actionStream = pressedInput("down").map(function(){ return { action: "MOVE_P
   .merge(pressedInput("x").map(function() { return { action: "ROTATE_PIECE_RIGHT" } }))
   .merge(gravity)
 
-var applyAction = function(previousState, a) {
-  var state = previousState.set('actions', List.of())
+var applyAction = function(state, a) {
   switch (a.action) {
     case "MOVE_PIECE_DOWN":
       return moveDown(state)
