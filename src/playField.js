@@ -27,20 +27,23 @@ var setLandingSpace = (playField, landingSpace) =>
       .concat(row.slice(3, 7).map((cell, cellIndex) => landingSpace.get(rowIndex).get(cellIndex)))
       .concat(row.slice(7))
   ).concat(playField.slice(2, 20))
+
 var addPieceToPlayField = function(playField, piece) {
   var landingSpace = addPieceToLandingSpace(getLandingSpace(playField), piece)
   return setLandingSpace(playField, landingSpace)
 }
 
+var gravity = newPiece.flatMapLatest(() => Bacon.interval(1000, { transformation: "MOVE_PIECE_DOWN" }))
+
 var playFieldTransformationStream = newPiece.map(function(piece){ return { transformation: "NEW_PIECE", piece } })
-  .merge(playerPressedDown.map(function(){ return { transformation: "PLAYER_PRESSED_DOWN" } }))
+  .merge(playerPressedDown.map(function(){ return { transformation: "MOVE_PIECE_DOWN" } }))
+  .merge(gravity)
 
 var applyTransformation = function(playField, t) {
-  console.log(t)
   switch (t.transformation) {
     case "NEW_PIECE":
       return addPieceToPlayField(playField, t.piece)
-    case "PLAYER_PRESSED_DOWN":
+    case "MOVE_PIECE_DOWN":
       return moveDown(playField)
   }
 }
