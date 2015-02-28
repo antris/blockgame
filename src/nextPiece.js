@@ -13,7 +13,8 @@ var initialStack = Immutable.List.of(
   Map({piece: getRandomPiece(), nth: 1}),
   Map({piece: getRandomPiece(), nth: 2}),
   Map({piece: getRandomPiece(), nth: 3}),
-  Map({piece: getRandomPiece(), nth: 4})
+  Map({piece: getRandomPiece(), nth: 4}),
+  Map({piece: getRandomPiece(), nth: 5})
 )
 
 var popStack = function(stack) {
@@ -22,8 +23,12 @@ var popStack = function(stack) {
 
 var stackStream = nextStream.scan(initialStack, popStack)
 
+var currentPiece = stackStream.map((xs) => xs.first())
+var nextPieces = stackStream.map((xs) => xs.slice(1))
+
 module.exports = {
   getRandomPiece,
-  stackStream,
+  currentPiece,
+  nextPieces,
   next: () => nextStream.push(true)
 }
