@@ -94,6 +94,12 @@ var addPieceToPlayField = function(state, piece) {
   return state.set('playField', setLandingSpace(playField, landingSpace))
 }
 
+var removeCompleteLines = function(state) {
+  var incompleteLines = state.get('environment').filter((row) => row.some((cell) => cell === 0))
+  var newEmptyLines = Immutable.Repeat(EMPTY_ROW, 20 - incompleteLines.size).toList()
+  return state.set('environment', newEmptyLines.concat(incompleteLines))
+}
+
 var gravity = Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" })
 
 var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", piece } })
@@ -119,7 +125,8 @@ var applyAction = function(previousState, a) {
       return state
   }
 }
-var tick = actionStream.scan(INITIAL_STATE, applyAction)
+
+var tick = actionStream.scan(INITIAL_STATE, applyAction).map(removeCompleteLines)
 
 tick.filter((state) => state.get('actions').contains("NEXT_PIECE")).onValue(next)
 
