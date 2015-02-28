@@ -4,9 +4,8 @@ var {List} = Immutable
 var pieces = require('./pieces')
 var inputStream = require('./input')
 
-var EMPTY_ROW  = List.of(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-var initialPlayField = Immutable.Repeat(EMPTY_ROW, 20)
+var EMPTY_ROW  = Immutable.Repeat(0, 10)
+var INITIAL_PLAY_FIELD = Immutable.Repeat(EMPTY_ROW, 20)
 
 var moveDown = (playField) => List.of(EMPTY_ROW).concat(playField.slice(0, 20))
 
@@ -47,6 +46,6 @@ var applyTransformation = function(playField, t) {
       return moveDown(playField)
   }
 }
-var playFieldStream = playFieldTransformationStream.scan(initialPlayField, applyTransformation)
+var playFieldStream = playFieldTransformationStream.scan(INITIAL_PLAY_FIELD, applyTransformation)
 
 module.exports = playFieldStream
