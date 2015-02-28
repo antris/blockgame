@@ -137,6 +137,8 @@ var applyAction = function(previousState, a) {
       return moveRight(state)
     case "DROP_PIECE":
       return drop(state)
+    default:
+      return state
   }
 }
 
