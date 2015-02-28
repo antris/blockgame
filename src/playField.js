@@ -53,8 +53,6 @@ var initialState = Immutable.Map({
   pieceY: 0
 })
 
-
-
 var next = () => nextStream.push(true)
 
 var foldGrids = (g1, g2) =>
