@@ -62,7 +62,7 @@ var asMap = Immutable.Map({ i, o, t, s, z, j, l })
 var asList = List.of(i, o, t, s, z, j, l)
 
 var toString = function(piece) {
-  return asMap.keyOf(asList.find((rotations) => rotations.get(0) == piece)).toUpperCase()
+  return asMap.keyOf(asList.find((p) => p == piece)).toUpperCase()
 }
 
 module.exports = { asMap, asList, toString }

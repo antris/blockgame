@@ -2,15 +2,9 @@ var React = require('react')
 var Immutable = require('immutable')
 var Bacon = require('baconjs')
 var NextPiecesView = require('./views/nextPiecesView')
-var {playFieldStream, environmentStream, nextPieces, currentPiece} = require('./playField')
+var {worldStream} = require('./playField')
 var PlayField = require('./views/playFieldView')
 var input = require('./input')
-var worldStream = Bacon.combineTemplate({
-  currentPiece,
-  nextPieces,
-  environment: environmentStream,
-  playField: playFieldStream
-})
 
 var history = Immutable.List.of()
 
@@ -37,11 +31,7 @@ var Main = React.createClass({
       <p>History size: {this.props.history.size}</p>
       <p><input type="range" min="0" max={this.props.history.size} onChange={this.onSlide} ref="historySlider" /></p>
       <NextPiecesView pieces={world.get('nextPieces')} />
-      <PlayField
-        playField={world.get('playField')}
-        currentPiece={world.get('currentPiece')}
-        environment={world.get('environment')}
-      />
+      <PlayField world={world} />
     </div>
   }
 })

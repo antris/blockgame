@@ -7,9 +7,7 @@ var EMPTY_CELL = 0
 var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
 var EMPTY_GRID = Immutable.Repeat(EMPTY_ROW, 20).toList()
 
-var nextStream = new Bacon.Bus()
-
-var getRandomPiece = () => pieces.asList.get(Math.random() * pieces.asList.size).get(0)
+var getRandomPiece = () => pieces.asList.get(Math.random() * pieces.asList.size)
 
 var initialStack = Immutable.List.of(
   Map({piece: getRandomPiece(), nth: 0}),
@@ -19,15 +17,6 @@ var initialStack = Immutable.List.of(
   Map({piece: getRandomPiece(), nth: 4}),
   Map({piece: getRandomPiece(), nth: 5})
 )
-
-var popStack = function(stack) {
-  return stack.slice(1).concat([Map({ piece: getRandomPiece(), nth: stack.last().get("nth") + 1 })])
-}
-
-var stackStream = nextStream.scan(initialStack, popStack)
-
-var currentPiece = stackStream.map((xs) => xs.first())
-var nextPieces = stackStream.map((xs) => xs.slice(1))
 
 var placePieceInGrid = function(grid, pieceRotations, rotation, x, y) {
   var piece = pieceRotations.get(rotation)
@@ -46,14 +35,13 @@ var placePieceInGrid = function(grid, pieceRotations, rotation, x, y) {
 
 var initialState = Immutable.Map({
   environment: EMPTY_GRID,
-  playField: EMPTY_GRID,
   actions: List.of(),
+  currentPiece: initialStack.first().get('piece'),
+  nextPieces: initialStack.slice(1),
   pieceRotation: 0,
   pieceX: 0,
   pieceY: 0
 })
-
-var next = () => nextStream.push(true)
 
 var foldGrids = (g1, g2) =>
   g1.map((row, rowIndex) =>
@@ -62,9 +50,9 @@ var foldGrids = (g1, g2) =>
       )
   )
 
-var nudgeDown = (playField) => List.of(EMPTY_ROW).concat(playField.slice(0, 19))
-var nudgeRight = (playField) => playField.map((row) => List.of(EMPTY_CELL).concat(row.remove(-1)))
-var nudgeLeft = (playField) => playField.map((row) => row.slice(1).push(EMPTY_CELL))
+var nudgeDown = (state) => state.set('pieceY', state.get('pieceY') + 1)
+var nudgeRight = (state) => state.set('pieceX', state.get('pieceX') + 1)
+var nudgeLeft = (state) => state.set('pieceX', state.get('pieceX') - 1)
 
 var isOverlapping = (g1, g2) =>
   g1.find((row, rowIndex) =>
@@ -73,59 +61,68 @@ var isOverlapping = (g1, g2) =>
     )
   ) !== undefined
 
-var collidesWithBottomIfMovesDown = (playField) => playField.last().some((cell) => cell !== EMPTY_CELL)
-var collidesWithWallIfMovesLeft = (playField) => playField.map((row) => row.first()).some((cell) => cell !== EMPTY_CELL)
-var collidesWithWallIfMovesRight = (playField) => playField.map((row) => row.last()).some((cell) => cell !== EMPTY_CELL)
-var canMoveDown = (playField, environment) =>
-  !collidesWithBottomIfMovesDown(playField) && !isOverlapping(nudgeDown(playField), environment)
-var canMoveLeft = (playField, environment) =>
-  !collidesWithWallIfMovesLeft(playField) && !isOverlapping(nudgeLeft(playField), environment)
-var canMoveRight = (playField, environment) =>
-  !collidesWithWallIfMovesRight(playField) && !isOverlapping(nudgeRight(playField), environment)
+var withinBounds = (x, y) => x >= 0 && x < 10 && y >= 0 && y < 20
+
+var nonEmptyCellCoordinates = function(state) {
+  return state.get('currentPiece').get(state.get('pieceRotation')).flatMap(function(row, rowIndex) {
+    return row.flatMap((cell, cellIndex) => cell > 0 ? List.of(List.of(cellIndex + state.get('pieceX'), rowIndex + state.get('pieceY'))) : List.of())
+  })
+}
+
+var pieceInGrid = (state) =>
+  placePieceInGrid(EMPTY_GRID, state.get('currentPiece'), state.get('pieceRotation'), state.get('pieceX'), state.get('pieceY'))
+
+var collidesWithBottomIfMovesDown = (state) => nonEmptyCellCoordinates(nudgeDown(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
+var collidesWithWallIfMovesLeft = (state) => nonEmptyCellCoordinates(nudgeLeft(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
+var collidesWithWallIfMovesRight = (state) => nonEmptyCellCoordinates(nudgeRight(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
+
+var canMoveDown = (state) =>
+  !collidesWithBottomIfMovesDown(state) && !isOverlapping(pieceInGrid(nudgeDown(state)), state.get('environment'))
+var canMoveLeft = (state) =>
+  !collidesWithWallIfMovesLeft(state) && !isOverlapping(pieceInGrid(nudgeLeft(state)), state.get('environment'))
+var canMoveRight = (state) =>
+  !collidesWithWallIfMovesRight(state) && !isOverlapping(pieceInGrid(nudgeRight(state)), state.get('environment'))
+
+var nextPiece = (state) =>
+  state
+    .set('environment', foldGrids(state.get('environment'), pieceInGrid(state)))
+    .set('currentPiece', state.get('nextPieces').first().get('piece'))
+    .set('pieceX', 3)
+    .set('pieceY', 0)
+    .set('pieceRotation', 0)
+    .set('nextPieces', state.get('nextPieces').slice(1).push(
+      Map({ piece: getRandomPiece(), nth: state.get('nextPieces').last().get('nth') + 1 })
+    ))
 
 var moveDown = function(state) {
-  var playField = state.get('playField')
-  var env = state.get('environment')
-  if (collidesWithBottomIfMovesDown(playField)) {
-    return state
-      .set('playField', EMPTY_GRID)
-      .set('environment', foldGrids(env, playField))
-      .set('actions', List.of("NEXT_PIECE"))
+  if (collidesWithBottomIfMovesDown(state)) {
+    return nextPiece(state)
   } else {
-    if (canMoveDown(playField, env)) {
-      return state.set('playField', nudgeDown(playField))
+    if (canMoveDown(state)) {
+      return nudgeDown(state)
     } else {
-      return state
-        .set('playField', EMPTY_GRID)
-        .set('environment', foldGrids(state.get('environment'), playField))
-        .set('actions', List.of("NEXT_PIECE"))
+      return nextPiece(state)
     }
   }
 }
 
 var drop = function(state) {
-  var playField = state.get('playField')
-  var env = state.get('environment')
-  while (canMoveDown(playField, env)) {
-    playField = nudgeDown(playField)
+  while (canMoveDown(state)) {
+    state = nudgeDown(state)
   }
-  return state.set('playField', playField)
+  return state
 }
 
 var moveLeft = function(state) {
-  var playField = state.get('playField')
-  var env = state.get('environment')
-  if (canMoveLeft(playField, env)) {
-    return state.set('playField', nudgeLeft(playField))
+  if (canMoveLeft(state)) {
+    return nudgeLeft(state)
   } else {
     return state
   }
 }
 var moveRight = function(state) {
-  var playField = state.get('playField')
-  var env = state.get('environment')
-  if (canMoveRight(playField, env)) {
-    return state.set('playField', nudgeRight(playField))
+  if (canMoveRight(state)) {
+    return nudgeRight(state)
   } else {
     return state
   }
@@ -137,26 +134,6 @@ var pressedInput = (inputType) =>
     .skipDuplicates()
     .filter((isPressed) => isPressed)
 
-var newPiece = currentPiece.map((x) => x.get('piece')).toEventStream()
-var getLandingSpace = (playField) => playField.slice(0, 4).map((row) => row.slice(3, 7))
-var addPieceToLandingSpace = (landingSpace, piece) => landingSpace.map((row, rowIndex) =>
-  row.map(function(cell, cellIndex) {
-    return piece.get(rowIndex).get(cellIndex) === 0 ? cell : piece.get(rowIndex).get(cellIndex)
-  })
-)
-var setLandingSpace = (playField, landingSpace) =>
-  playField.slice(0, 4).map((row, rowIndex) =>
-    row.slice(0, 3)
-      .concat(row.slice(3, 7).map((cell, cellIndex) => landingSpace.get(rowIndex).get(cellIndex)))
-      .concat(row.slice(7))
-  ).concat(playField.slice(4, 20))
-
-var addPieceToPlayField = function(state, piece) {
-  var playField = state.get('playField')
-  var landingSpace = addPieceToLandingSpace(getLandingSpace(playField), piece)
-  return state.set('playField', setLandingSpace(playField, landingSpace))
-}
-
 var removeCompleteLines = function(state) {
   var incompleteLines = state.get('environment').filter((row) => row.some((cell) => cell === 0))
   var newEmptyLines = Immutable.Repeat(EMPTY_ROW, 20 - incompleteLines.size).toList()
@@ -165,8 +142,7 @@ var removeCompleteLines = function(state) {
 
 var gravity = Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" })
 
-var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", piece } })
-  .merge(pressedInput("down").map(function(){ return { action: "MOVE_PIECE_DOWN" } }))
+var actionStream = pressedInput("down").map(function(){ return { action: "MOVE_PIECE_DOWN" } })
   .merge(pressedInput("left").map(function(){ return { action: "MOVE_PIECE_LEFT" } }))
   .merge(pressedInput("right").map(function(){ return { action: "MOVE_PIECE_RIGHT" } }))
   .merge(pressedInput("up").map(function() { return { action: "DROP_PIECE" } }))
@@ -177,8 +153,6 @@ var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", p
 var applyAction = function(previousState, a) {
   var state = previousState.set('actions', List.of())
   switch (a.action) {
-    case "NEW_PIECE":
-      return addPieceToPlayField(state, a.piece)
     case "MOVE_PIECE_DOWN":
       return moveDown(state)
     case "MOVE_PIECE_LEFT":
@@ -200,11 +174,6 @@ var nextTick = function(previousState, a) {
 
 var tick = actionStream.scan(initialState, nextTick)
 
-tick.filter((state) => state.get('actions').contains("NEXT_PIECE")).onValue(next)
-
 module.exports = {
-  playFieldStream: tick.map((x) => x.get('playField')),
-  environmentStream: tick.map((x) => x.get('environment')),
-  nextPieces,
-  currentPiece
+  worldStream: tick
 }
