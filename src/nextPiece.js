@@ -26,6 +26,8 @@ var stackStream = nextStream.scan(initialStack, popStack)
 var currentPiece = stackStream.map((xs) => xs.first())
 var nextPieces = stackStream.map((xs) => xs.slice(1))
 
+currentPiece.map((x) => x.get('piece')).map((x) => pieces.toString(x)).log('current piece')
+
 module.exports = {
   getRandomPiece,
   currentPiece,

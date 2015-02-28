@@ -12,17 +12,34 @@ var Cell = React.createClass({
   }
 })
 
+var toString = function(playField) {
+  var s = '';
+  playField.forEach(function(row) {
+    row.forEach(function(cell) {
+      s += cell;
+    })
+    s += '\n';
+  })
+  return s
+}
+
+var merge = (p1, p2) =>
+  p1.map((y, yIndex) =>
+    y.map((x, xIndex) => Math.max(x, p2.get(yIndex).get(xIndex)))
+  )
+
 module.exports = React.createClass({
   render: function() {
     var env = this.props.environment
     return <div>
-      {this.props.playField.map((row, rowIndex) =>
-        <div>{
-          row.map(function(cell, cellIndex) {
-            var cellType = Math.max(cell, env.get(rowIndex).get(cellIndex))
-            return <Cell cellType={cellType} />
+      {merge(this.props.playField, env).map((row) =>
+        <div>
+        {
+          row.map(function(cell) {
+            return <Cell cellType={cell} />
           }).toJS()
-        }</div>
+        }
+        </div>
       ).toJS()}
     </div>
   }

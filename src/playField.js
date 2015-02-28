@@ -6,6 +6,7 @@ var inputStream = require('./input')
 var EMPTY_CELL = 0
 var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10)
 var EMPTY_PLAY_FIELD = Immutable.Map({ playField: Immutable.Repeat(EMPTY_ROW, 20), actions: List.of() })
+var {currentPiece, next} = require('./nextPiece')
 
 var moveDown = function(playField) {
   var collidesWithBottom = playField.last().some((cell) => cell !== EMPTY_CELL)
@@ -22,10 +23,12 @@ var playerPressedDown = inputStream
   .skipDuplicates()
   .filter((isPressed) => isPressed)
 
-var newPiece = Bacon.once(pieces.asMap.get("i")).delay(1000)
+var newPiece = currentPiece.map((x) => x.get('piece')).toEventStream()
 var getLandingSpace = (playField) => playField.slice(0, 2).map((row) => row.slice(3, 7))
 var addPieceToLandingSpace = (landingSpace, piece) => landingSpace.map((row, rowIndex) =>
-  row.map((cell, cellIndex) => piece.get(rowIndex).get(cellIndex) === 0 ? cell : piece.get(rowIndex).get(cellIndex))
+  row.map(function(cell, cellIndex) {
+    return piece.get(rowIndex).get(cellIndex) === 0 ? cell : piece.get(rowIndex).get(cellIndex)
+  })
 )
 var setLandingSpace = (playField, landingSpace) =>
   playField.slice(0, 2).map((row, rowIndex) =>
@@ -39,7 +42,7 @@ var addPieceToPlayField = function(playField, piece) {
   return Immutable.Map({ playField: setLandingSpace(playField, landingSpace), actions: List.of() })
 }
 
-var gravity = newPiece.flatMapLatest(() => Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" }))
+var gravity = Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" })
 
 var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", piece } })
   .merge(playerPressedDown.map(function(){ return { action: "MOVE_PIECE_DOWN" } }))
@@ -58,6 +61,8 @@ var tick = actionStream.scan(EMPTY_PLAY_FIELD, applyAction)
 var freezeStream = tick.flatMap((t) =>
   Bacon.fromArray(t.get('actions').filter((a) => a.get('action') === "COLLIDED_WITH_BOTTOM").map((a) => a.get('playField')).toArray())
 )
+
+freezeStream.onValue(next)
 
 module.exports = {
   playFieldStream: tick.map((x) => x.get('playField')),
