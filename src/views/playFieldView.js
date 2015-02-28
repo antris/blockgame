@@ -7,7 +7,7 @@ var colors = {
   3: 'cyan',
   4: 'purple',
   5: 'green',
-  6: 'blue',
+  6: 'lightblue',
   7: 'orange'
 }
 
