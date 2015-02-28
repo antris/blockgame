@@ -4,7 +4,7 @@ var {List} = Immutable
 var pieces = require('./pieces')
 var inputStream = require('./input')
 var EMPTY_CELL = 0
-var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10)
+var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
 var EMPTY_PLAY_FIELD = Immutable.Map({ playField: Immutable.Repeat(EMPTY_ROW, 20), actions: List.of() })
 var {currentPiece, next} = require('./nextPiece')
 
@@ -17,11 +17,27 @@ var moveDown = function(playField) {
   }
 }
 
-var playerPressedDown = inputStream
-  .map((inputs) => inputs.get("down"))
-  .toEventStream()
-  .skipDuplicates()
-  .filter((isPressed) => isPressed)
+var moveLeft = (playField) =>
+  Immutable.Map({
+    playField: playField.map((row) =>
+        row.slice(1).push(EMPTY_CELL)
+    ),
+    actions: List.of()
+  })
+var moveRight = (playField) =>
+  Immutable.Map({
+    playField: playField.map((row) =>
+      List.of(EMPTY_CELL).concat(row.remove(-1))
+    ),
+    actions: List.of()
+  })
+
+var pressedInput = (inputType) =>
+  inputStream
+    .map((inputs) => inputs.get(inputType))
+    .toEventStream()
+    .skipDuplicates()
+    .filter((isPressed) => isPressed)
 
 var newPiece = currentPiece.map((x) => x.get('piece')).toEventStream()
 var getLandingSpace = (playField) => playField.slice(0, 2).map((row) => row.slice(3, 7))
@@ -45,7 +61,9 @@ var addPieceToPlayField = function(playField, piece) {
 var gravity = Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" })
 
 var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", piece } })
-  .merge(playerPressedDown.map(function(){ return { action: "MOVE_PIECE_DOWN" } }))
+  .merge(pressedInput("down").map(function(){ return { action: "MOVE_PIECE_DOWN" } }))
+  .merge(pressedInput("left").map(function(){ return { action: "MOVE_PIECE_LEFT" } }))
+  .merge(pressedInput("right").map(function(){ return { action: "MOVE_PIECE_RIGHT" } }))
   .merge(gravity)
 
 var applyAction = function(previousState, a) {
@@ -54,6 +72,10 @@ var applyAction = function(previousState, a) {
       return addPieceToPlayField(previousState.get('playField'), a.piece)
     case "MOVE_PIECE_DOWN":
       return moveDown(previousState.get('playField'))
+    case "MOVE_PIECE_LEFT":
+      return moveLeft(previousState.get('playField'))
+    case "MOVE_PIECE_RIGHT":
+      return moveRight(previousState.get('playField'))
   }
 }
 var tick = actionStream.scan(EMPTY_PLAY_FIELD, applyAction)
