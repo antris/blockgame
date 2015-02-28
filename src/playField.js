@@ -17,21 +17,32 @@ var moveDown = function(playField) {
   }
 }
 
-var moveLeft = (playField) =>
-  Immutable.Map({
-    playField: playField.map((row) =>
-        row.slice(1).push(EMPTY_CELL)
-    ),
-    actions: List.of()
-  })
-var moveRight = (playField) =>
-  Immutable.Map({
-    playField: playField.map((row) =>
-      List.of(EMPTY_CELL).concat(row.remove(-1))
-    ),
-    actions: List.of()
-  })
-
+var moveLeft = function(playField) {
+  var collidesWithWall = playField.map((row) => row.first()).some((cell) => cell !== EMPTY_CELL)
+  if (collidesWithWall) {
+    return Immutable.Map({ playField, actions: List.of() })
+  } else {
+    return Immutable.Map({
+      playField: playField.map((row) =>
+          row.slice(1).push(EMPTY_CELL)
+      ),
+      actions: List.of()
+    })
+  }
+}
+var moveRight = function(playField) {
+  var collidesWithWall = playField.map((row) => row.last()).some((cell) => cell !== EMPTY_CELL)
+  if (collidesWithWall) {
+    return Immutable.Map({ playField, actions: List.of() })
+  } else {
+    return Immutable.Map({
+      playField: playField.map((row) =>
+          List.of(EMPTY_CELL).concat(row.remove(-1))
+      ),
+      actions: List.of()
+    })
+  }
+}
 var pressedInput = (inputType) =>
   inputStream
     .map((inputs) => inputs.get(inputType))
