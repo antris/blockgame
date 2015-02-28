@@ -107,6 +107,8 @@ var actionStream = newPiece.map(function(piece){ return { action: "NEW_PIECE", p
   .merge(pressedInput("left").map(function(){ return { action: "MOVE_PIECE_LEFT" } }))
   .merge(pressedInput("right").map(function(){ return { action: "MOVE_PIECE_RIGHT" } }))
   .merge(pressedInput("up").map(function() { return { action: "DROP_PIECE" } }))
+  .merge(pressedInput("z").map(function() { return { action: "ROTATE_PIECE_LEFT" } }))
+  .merge(pressedInput("x").map(function() { return { action: "ROTATE_PIECE_RIGHT" } }))
   .merge(gravity)
 
 var applyAction = function(previousState, a) {
