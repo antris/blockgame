@@ -16,16 +16,36 @@ var foldGrids = (g1, g2) =>
       )
   )
 
+var nudgeDown = (playField) => List.of(EMPTY_ROW).concat(playField.slice(0, 19))
+
+var isOverlapping = (g1, g2) =>
+  g1.find((row, rowIndex) =>
+    row.find((cell, cellIndex) =>
+      cell > 0 && g2.get(rowIndex).get(cellIndex) > 0
+    )
+  ) !== undefined
+
+var canMoveDown = (playField, environment) =>
+  !isOverlapping(nudgeDown(playField), environment)
+
 var moveDown = function(state) {
   var playField = state.get('playField')
+  var env = state.get('environment')
   var collidesWithBottom = playField.last().some((cell) => cell !== EMPTY_CELL)
   if (collidesWithBottom) {
     return state
       .set('playField', EMPTY_GRID)
-      .set('environment', foldGrids(state.get('environment'), playField))
-      .set('actions', List.of(Immutable.Map({ action: "COLLIDED_WITH_BOTTOM" })))
+      .set('environment', foldGrids(env, playField))
+      .set('actions', List.of("NEXT_PIECE"))
   } else {
-    return state.set('playField', List.of(EMPTY_ROW).concat(playField.slice(0, 19)))
+    if (canMoveDown(playField, env)) {
+      return state.set('playField', nudgeDown(playField))
+    } else {
+      return state
+        .set('playField', EMPTY_GRID)
+        .set('environment', foldGrids(state.get('environment'), playField))
+        .set('actions', List.of("NEXT_PIECE"))
+    }
   }
 }
 
@@ -71,7 +91,7 @@ var setLandingSpace = (playField, landingSpace) =>
 var addPieceToPlayField = function(state, piece) {
   var playField = state.get('playField')
   var landingSpace = addPieceToLandingSpace(getLandingSpace(playField), piece)
-  return state.set('playField', setLandingSpace(playField, landingSpace)).set('actions', List.of())
+  return state.set('playField', setLandingSpace(playField, landingSpace))
 }
 
 var gravity = Bacon.interval(1000, { action: "MOVE_PIECE_DOWN" })
@@ -101,12 +121,7 @@ var applyAction = function(previousState, a) {
 }
 var tick = actionStream.scan(INITIAL_STATE, applyAction)
 
-var freezeStream = tick.flatMap((t) =>
-  Bacon.fromArray(t.get('actions').filter((a) => a.get('action') === "COLLIDED_WITH_BOTTOM").map((a) => a.get('playField')).toArray())
-)
-
-freezeStream.onValue(next)
-
+tick.filter((state) => state.get('actions').contains("NEXT_PIECE")).onValue(next)
 
 module.exports = {
   playFieldStream: tick.map((x) => x.get('playField')),
