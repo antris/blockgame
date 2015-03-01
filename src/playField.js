@@ -147,20 +147,32 @@ var cycle = function(n, max, dir) {
   }
 }
 
-var rotateRightIfLegal = function(state) {
-  if (isLegalMove(rotateRight, state)) {
-    return rotateRight(state)
+var composeMoves = (f1, f2) =>
+  (state) => f2(f1(state))
+
+var tryMove = (move, state) => isLegalMove(move(state)) ? move(state) : state
+
+var tryMoves = function(moves, state) {
+  var legalMove = moves.find((move) => isLegalMove(move, state))
+  if (legalMove) {
+    return legalMove(state)
   } else {
     return state
   }
 }
-var rotateLeftIfLegal = function(state) {
-  if (isLegalMove(rotateLeft, state)) {
-    return rotateLeft(state)
-  } else {
-    return state
-  }
-}
+
+var rotateRightIfLegal = (state) =>
+  tryMoves(List.of(
+    rotateRight,
+    composeMoves(nudgeRight, rotateRight),
+    composeMoves(nudgeLeft, rotateRight)
+  ), state)
+var rotateLeftIfLegal = (state) =>
+  tryMoves(List.of(
+    rotateLeft,
+    composeMoves(nudgeRight, rotateLeft),
+    composeMoves(nudgeLeft, rotateLeft)
+  ), state)
 
 var rotateRight = (state) =>
   state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, 1))
