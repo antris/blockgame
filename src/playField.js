@@ -53,7 +53,8 @@ var initialState = Immutable.Map({
   pieceY: 0,
   lastGravity: now(),
   lastLockReset: now(),
-  lastLock: now()
+  lastLock: now(),
+  hasEnded: false
 })
 
 var foldGrids = (g1, g2) =>
@@ -267,15 +268,19 @@ var allActions = Bacon.mergeAll(
 var setLockingState = (state) =>
   state.set('isLocking', !isLegalMove(nudgeDown, state))
 
+var checkGameEnd = (state) =>
+  isOverlapping(state.get('environment'), currentPieceInGrid(state)) ? state.set('hasEnded', true) : state
+
 var nextTick = function(state, fn) {
   var state = fn(state)
   state = removeCompleteLines(state)
   state = nextPiece(state)
+  state = checkGameEnd(state)
   state = setLockingState(state)
   return state
 }
 
-var tick = allActions.scan(initialState, nextTick)
+var tick = allActions.scan(initialState, nextTick).takeWhile((state) => state.get('hasEnded') === false)
 
 module.exports = {
   worldStream: tick
