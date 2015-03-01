@@ -95,13 +95,23 @@ var isLegalMove = (fn, state) =>
 
 var SPAWN_DELAY = 30
 
+var initialRotation = function(state) {
+  if (state.get('inputs').get('x')) {
+    return 1
+  } else if (state.get('inputs').get('z')) {
+    return -1
+  } else {
+    return 0
+  }
+}
+
 var nextPiece = function(state) {
   if (state.get('currentPiece') === undefined && framesSince(state.get('lastLock')) > SPAWN_DELAY) {
     return state
       .set('currentPiece', state.get('nextPieces').first().get('piece'))
       .set('pieceX', 3)
       .set('pieceY', 0)
-      .set('pieceRotation', 0)
+      .set('pieceRotation', initialRotation(state))
       .set('nextPieces', state.get('nextPieces').slice(1).push(
         Map({ piece: getRandomPiece(), nth: state.get('nextPieces').last().get('nth') + 1 })
       ))
