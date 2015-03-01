@@ -147,8 +147,25 @@ var cycle = function(n, max, dir) {
   }
 }
 
-var rotateRight = (state) => state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, 1))
-var rotateLeft = (state) => state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, -1))
+var rotateRightIfLegal = function(state) {
+  if (isLegalMove(rotateRight, state)) {
+    return rotateRight(state)
+  } else {
+    return state
+  }
+}
+var rotateLeftIfLegal = function(state) {
+  if (isLegalMove(rotateLeft, state)) {
+    return rotateLeft(state)
+  } else {
+    return state
+  }
+}
+
+var rotateRight = (state) =>
+  state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, 1))
+var rotateLeft = (state) =>
+  state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, -1))
 
 var actionStream = (inputType, fn) => pressedInput(inputType).map(() => (state) => fn(state))
 
@@ -157,8 +174,8 @@ var allActions = Bacon.mergeAll(
   actionStream("left", moveLeft),
   actionStream("right", moveRight),
   actionStream("up", drop),
-  actionStream("z", rotateLeft),
-  actionStream("x", rotateRight),
+  actionStream("z", rotateLeftIfLegal),
+  actionStream("x", rotateRightIfLegal),
   gravity
 )
 
