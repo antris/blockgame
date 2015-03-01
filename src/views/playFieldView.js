@@ -7,10 +7,17 @@ var colors = {
   1: 'red',
   2: 'yellow',
   3: 'cyan',
-  4: 'purple',
+  4: 'magenta',
   5: 'green',
   6: 'lightblue',
-  7: 'orange'
+  7: 'orange',
+  8: 'darkred',
+  9: 'brown',
+  10: 'darkcyan',
+  11: 'purple',
+  12: 'darkgreen',
+  13: 'blue',
+  14: 'darkorange'
 }
 
 var Cell = React.createClass({
@@ -49,11 +56,14 @@ var nonEmptyCellCoordinates = function(state) {
   })
 }
 
+var setCell = (grid, x, y, cell) => grid.set(y, grid.get(y).set(x, cell))
+
 var currentPieceInGrid = function(state) {
   var putCell = function(grid, coords) {
     var x = coords.get(0)
     var y = coords.get(1)
-    return grid.set(y, grid.get(y).set(x, pieces.colors.get(state.get('currentPiece'))))
+    var l = state.get('isLocking') ? 7 : 0
+    return setCell(grid, x, y, pieces.colors.get(state.get('currentPiece')) + l)
   }
   var cells = nonEmptyCellCoordinates(state)
   var g = cells

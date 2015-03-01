@@ -220,9 +220,13 @@ var allActions = Bacon.mergeAll(
   tick
 )
 
+var setLockingState = (state) =>
+  state.set('isLocking', !isLegalMove(nudgeDown, state))
+
 var nextTick = function(state, fn) {
   var state = fn(state)
   state = removeCompleteLines(state)
+  state = setLockingState(state)
   return state
 }
 
