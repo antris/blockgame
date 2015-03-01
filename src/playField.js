@@ -32,6 +32,7 @@ var currentPieceInGrid = function(state) {
   var putCell = function(grid, coords) {
     var x = coords.get(0)
     var y = coords.get(1)
+    if (y < 0) return grid
     return grid.set(y, grid.get(y).set(x, pieces.colors.get(state.get('currentPiece'))))
   }
   var cells = nonEmptyCellCoordinates(state)
@@ -74,7 +75,7 @@ var isOverlapping = (g1, g2) =>
     )
   ) !== undefined
 
-var withinBounds = (x, y) => x >= 0 && x < 10 && y >= 0 && y < 20
+var withinBounds = (x, y) => x >= 0 && x < 10 && y < 20
 
 var nonEmptyCellCoordinates = function(state) {
   if (state.get('currentPiece')) {
@@ -107,10 +108,12 @@ var initialRotation = function(state) {
 
 var nextPiece = function(state) {
   if (state.get('currentPiece') === undefined && framesSince(state.get('lastLock')) > SPAWN_DELAY) {
+    var piece = state.get('nextPieces').first().get('piece')
+    var startY = piece === pieces.asMap.get('i') ? -1 : -2
     return state
-      .set('currentPiece', state.get('nextPieces').first().get('piece'))
+      .set('currentPiece', piece)
       .set('pieceX', 3)
-      .set('pieceY', 0)
+      .set('pieceY', startY)
       .set('pieceRotation', initialRotation(state))
       .set('nextPieces', state.get('nextPieces').slice(1).push(
         Map({ piece: getRandomPiece(), nth: state.get('nextPieces').last().get('nth') + 1 })
@@ -269,6 +272,7 @@ var setLockingState = (state) =>
 
 var checkGameEnd = (state) =>
   isOverlapping(state.get('environment'), currentPieceInGrid(state)) ? state.set('hasEnded', true) : state
+
 
 var nextTick = function(state, fn) {
   var state = fn(state)
