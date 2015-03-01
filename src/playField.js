@@ -54,7 +54,6 @@ var initialState = Immutable.Map({
   lastGravity: now(),
   lastLockReset: now(),
   lastLock: now(),
-  hasEnded: false,
   score: 0,
   level: 0
 })
@@ -372,7 +371,7 @@ var allActions = Bacon.mergeAll(
 var setLockingState = (state) => state.set('isLocking', !isLegalMove(nudgeDown, state))
 
 var checkGameEnd = (state) =>
-  isOverlapping(state.get('environment'), currentPieceInGrid(state)) ? state.set('hasEnded', true) : state
+  isOverlapping(state.get('environment'), currentPieceInGrid(state)) ? state.set('gameEnded', now()) : state
 
 var advanceLevel = function(state) {
   if (state.get('thisTick').get('pieceGotLocked')) {
@@ -396,17 +395,19 @@ var advanceLevel = function(state) {
 var resetTick = (state) => state.set('thisTick', Map({completedLines: 0}))
 
 var nextTick = function(state, action) {
-  state = resetTick(state)
-  state = action(state)
-  state = removeCompleteLines(state)
-  state = nextPiece(state)
-  state = checkGameEnd(state)
-  state = advanceLevel(state)
-  state = setLockingState(state)
+  if (state.get('gameEnded') === undefined) {
+    state = resetTick(state)
+    state = action(state)
+    state = removeCompleteLines(state)
+    state = nextPiece(state)
+    state = checkGameEnd(state)
+    state = advanceLevel(state)
+    state = setLockingState(state)
+  }
   return state
 }
 
-var tick = allActions.scan(initialState, nextTick).takeWhile((state) => state.get('hasEnded') === false)
+var tick = allActions.scan(initialState, nextTick)
 
 module.exports = {
   worldStream: tick

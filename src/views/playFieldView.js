@@ -51,12 +51,24 @@ module.exports = React.createClass({
   render: function() {
     var world = this.props.world
     var style = { paddingTop: '20px', float: 'left', marginRight: '20px' }
+    var hideAnimation = function(cell, rowIndex) {
+      if (world.get('gameEnded')) {
+        if (new Date().getTime() - world.get('gameEnded') > (20 - rowIndex) * 80) {
+          return 0
+        } else {
+          return cell
+        }
+      } else {
+        return cell
+      }
+    }
+
     return <div style={style}>
-      {currentPieceInGrid(world).map((row) =>
+      {currentPieceInGrid(world).map((row, rowIndex) =>
         <div>
         {
           row.map(function(cell) {
-            return <Cell cellType={cell} />
+            return <Cell cellType={hideAnimation(cell, rowIndex)} />
           }).toJS()
         }
         </div>
