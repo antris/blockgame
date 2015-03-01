@@ -97,7 +97,7 @@ var nextPiece = (state) =>
       Map({ piece: getRandomPiece(), nth: state.get('nextPieces').last().get('nth') + 1 })
     ))
 
-var moveDown = function(state) {
+var gravityMoveDown = function(state) {
   if (isLegalMove(nudgeDown, state)) {
     return nudgeDown(state).set('lastLockReset', now())
   } else {
@@ -106,6 +106,14 @@ var moveDown = function(state) {
     } else {
       return state
     }
+  }
+}
+
+var playerMoveDown = function(state) {
+  if (isLegalMove(nudgeDown, state)) {
+    return nudgeDown(state).set('lastLockReset', now())
+  } else {
+    return nextPiece(state)
   }
 }
 
@@ -202,7 +210,7 @@ var framesSince = (t) => (now() - t) / FRAME
 
 var gravity = function(state) {
   if (framesSince(state.get('lastGravity')) >= 30) {
-    return moveDown(state.set('lastGravity', now()))
+    return gravityMoveDown(state.set('lastGravity', now()))
   } else {
     return state
   }
@@ -211,7 +219,7 @@ var gravity = function(state) {
 var tick = Bacon.interval(FRAME, (state) => gravity(state))
 
 var allActions = Bacon.mergeAll(
-  actionStream("down", moveDown),
+  actionStream("down", playerMoveDown),
   actionStream("left", moveLeft),
   actionStream("right", moveRight),
   actionStream("up", drop),
