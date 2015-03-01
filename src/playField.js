@@ -154,14 +154,17 @@ var cycle = function(n, max, dir) {
 var rotateRight = (state) => state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, 1))
 var rotateLeft = (state) => state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, -1))
 
-var actionStream = pressedInput("down").map(() => (state) => moveDown(state))
-  .merge(pressedInput("left").map(() => (state) => moveLeft(state)))
-  .merge(pressedInput("right").map(() => (state) => moveRight(state)))
-  .merge(pressedInput("up").map(() => (state) => drop(state)))
-  .merge(pressedInput("z").map(() => (state) => rotateLeft(state)))
-  .merge(pressedInput("x").map(() => (state) => rotateRight(state)))
-  .merge(gravity)
+var actionStream = (inputType, fn) => pressedInput(inputType).map(() => (state) => fn(state))
 
+var allActions = Bacon.mergeAll(
+  actionStream("down", moveDown),
+  actionStream("left", moveLeft),
+  actionStream("right", moveRight),
+  actionStream("up", drop),
+  actionStream("z", rotateLeft),
+  actionStream("x", rotateRight),
+  gravity
+)
 
 var nextTick = function(state, fn) {
   var state = fn(state)
@@ -169,7 +172,7 @@ var nextTick = function(state, fn) {
   return state
 }
 
-var tick = actionStream.scan(initialState, nextTick)
+var tick = allActions.scan(initialState, nextTick)
 
 module.exports = {
   worldStream: tick
