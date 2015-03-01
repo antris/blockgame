@@ -63,12 +63,14 @@ module.exports = React.createClass({
       }
     }
 
+    var shouldShowCell = (cell, rowIndex) => world.get('paused') ? 0 : hideAnimation(cell, rowIndex)
+
     return <div style={style}>
       {currentPieceInGrid(world).map((row, rowIndex) =>
         <div>
         {
           row.map(function(cell) {
-            return <Cell cellType={hideAnimation(cell, rowIndex)} />
+            return <Cell cellType={shouldShowCell(cell, rowIndex)} />
           }).toJS()
         }
         </div>

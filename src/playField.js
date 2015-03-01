@@ -357,6 +357,7 @@ var holdPieceIfLegal = function(state) {
 
 var tick = Bacon.interval(FRAME, (state) => gravity(state))
 
+
 var allActions = Bacon.mergeAll(
   inputStream.map((inputs) => (state) => state.set('inputs', inputs)),
   actionStream("down", playerMoveDown),
@@ -395,20 +396,27 @@ var advanceLevel = function(state) {
 
 var resetTick = (state) => state.set('thisTick', Map({completedLines: 0}))
 
-var nextTick = function(state, action) {
-  if (state.get('gameEnded') === undefined) {
-    state = resetTick(state)
-    state = action(state)
-    state = removeCompleteLines(state)
-    state = nextPiece(state)
-    state = checkGameEnd(state)
-    state = advanceLevel(state)
-    state = setLockingState(state)
+var nextTick = function(state, [action, paused]) {
+  state = state.set('paused', paused)
+  if (!state.get('gameEnded')) {
+    if (!paused) {
+      state = resetTick(state)
+      state = action(state)
+      state = removeCompleteLines(state)
+      state = nextPiece(state)
+      state = checkGameEnd(state)
+      state = advanceLevel(state)
+      state = setLockingState(state)
+    }
   }
   return state
 }
 
-var tick = allActions.scan(initialState, nextTick)
+var paused = Bacon.update(false,
+  [pressedInput('p')], (prev) => !prev
+)
+
+var tick = Bacon.combineAsArray(allActions, paused).scan(initialState, nextTick)
 
 module.exports = {
   worldStream: tick

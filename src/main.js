@@ -43,7 +43,8 @@ var Main = React.createClass({
         DOWN = nudge piece down<br />
         LEFT = move piece left<br />
         RIGHT = move piece right<br />
-        D = hold piece
+        D = hold piece<br />
+        P = pause
       </p>
     </div>
   }
