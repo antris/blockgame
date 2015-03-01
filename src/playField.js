@@ -94,14 +94,10 @@ var nextPiece = (state) =>
     ))
 
 var moveDown = function(state) {
-  if (moveIsOutOfBounds(nudgeDown, state)) {
-    return nextPiece(state)
+  if (isLegalMove(nudgeDown, state)) {
+    return nudgeDown(state)
   } else {
-    if (isLegalMove(nudgeDown, state)) {
-      return nudgeDown(state)
-    } else {
-      return nextPiece(state)
-    }
+    return nextPiece(state)
   }
 }
 
