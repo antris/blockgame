@@ -1,4 +1,6 @@
 var React = require('react')
+var {List} = require('immutable')
+var pieces = require('../pieces')
 
 var colors = {
   0: 'black',
@@ -39,26 +41,32 @@ var merge = (p1, p2) =>
     y.map((x, xIndex) => Math.max(x, p2.get(yIndex).get(xIndex)))
   )
 
-var placePieceInGrid = function(grid, pieceRotations, rotation, x, y) {
-  var piece = pieceRotations.get(rotation)
-  var pieceHeight = piece.size
-  var pieceWidth = piece.get(0).size
-  var head = grid.slice(0, y)
-  var body = grid.slice(y, y + pieceHeight).map(function(row, rowIndex) {
-    var rowHead = row.slice(0, x)
-    var rowBody = row.slice(x, x + pieceWidth).map((cell, cellIndex) => Math.max(cell, piece.get(rowIndex).get(cellIndex)))
-    var rowTail = row.slice(x + pieceWidth)
-    return rowHead.concat(rowBody).concat(rowTail)
+var withinBounds = (x, y) => x >= 0 && x < 10 && y >= 0 && y < 20
+
+var nonEmptyCellCoordinates = function(state) {
+  return state.get('currentPiece').get(state.get('pieceRotation')).flatMap(function(row, rowIndex) {
+    return row.flatMap((cell, cellIndex) => cell > 0 ? List.of(List.of(cellIndex + state.get('pieceX'), rowIndex + state.get('pieceY'))) : List.of())
   })
-  var tail = grid.slice(y + pieceHeight)
-  return head.concat(body).concat(tail)
+}
+
+var currentPieceInGrid = function(state) {
+  var putCell = function(grid, coords) {
+    var x = coords.get(0)
+    var y = coords.get(1)
+    return grid.set(y, grid.get(y).set(x, pieces.colors.get(state.get('currentPiece'))))
+  }
+  var cells = nonEmptyCellCoordinates(state)
+  var g = cells
+    .filter((coords) => withinBounds(coords.get(0), coords.get(1)))
+    .reduce(putCell, state.get('environment'))
+  return g
 }
 
 module.exports = React.createClass({
   render: function() {
     var world = this.props.world
     return <div>
-      {placePieceInGrid(world.get('environment'), world.get('currentPiece'), world.get('pieceRotation'), world.get('pieceX'), world.get('pieceY')).map((row) =>
+      {currentPieceInGrid(world).map((row) =>
         <div>
         {
           row.map(function(cell) {

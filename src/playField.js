@@ -7,6 +7,17 @@ var EMPTY_CELL = 0
 var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
 var EMPTY_GRID = Immutable.Repeat(EMPTY_ROW, 20).toList()
 
+var toString = function(playField) {
+  var s = '';
+  playField.forEach(function(row) {
+    row.forEach(function(cell) {
+      s += cell;
+    })
+    s += '\n';
+  })
+  return s
+}
+
 var getRandomPiece = () => pieces.asList.get(Math.random() * pieces.asList.size)
 
 var initialStack = Immutable.List.of(
@@ -18,19 +29,17 @@ var initialStack = Immutable.List.of(
   Map({piece: getRandomPiece(), nth: 5})
 )
 
-var placePieceInGrid = function(grid, pieceRotations, rotation, x, y) {
-  var piece = pieceRotations.get(rotation)
-  var pieceHeight = piece.size
-  var pieceWidth = piece.get(0).size
-  var head = grid.slice(0, y)
-  var body = grid.slice(y, y + pieceHeight).map(function(row, rowIndex) {
-    var rowHead = row.slice(0, x)
-    var rowBody = row.slice(x, x + pieceWidth).map((cell, cellIndex) => Math.max(cell, piece.get(rowIndex).get(cellIndex)))
-    var rowTail = row.slice(x + pieceWidth)
-    return rowHead.concat(rowBody).concat(rowTail)
-  })
-  var tail = grid.slice(y + pieceHeight)
-  return head.concat(body).concat(tail)
+var currentPieceInGrid = function(state) {
+  var putCell = function(grid, coords) {
+    var x = coords.get(0)
+    var y = coords.get(1)
+    return grid.set(y, grid.get(y).set(x, pieces.colors.get(state.get('currentPiece'))))
+  }
+  var cells = nonEmptyCellCoordinates(state)
+  var g = cells
+    .filter((coords) => withinBounds(coords.get(0), coords.get(1)))
+    .reduce(putCell, EMPTY_GRID)
+  return g
 }
 
 var initialState = Immutable.Map({
@@ -68,23 +77,20 @@ var nonEmptyCellCoordinates = function(state) {
   })
 }
 
-var pieceInGrid = (state) =>
-  placePieceInGrid(EMPTY_GRID, state.get('currentPiece'), state.get('pieceRotation'), state.get('pieceX'), state.get('pieceY'))
-
 var collidesWithBottomIfMovesDown = (state) => nonEmptyCellCoordinates(nudgeDown(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
 var collidesWithWallIfMovesLeft = (state) => nonEmptyCellCoordinates(nudgeLeft(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
 var collidesWithWallIfMovesRight = (state) => nonEmptyCellCoordinates(nudgeRight(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
 
 var canMoveDown = (state) =>
-  !collidesWithBottomIfMovesDown(state) && !isOverlapping(pieceInGrid(nudgeDown(state)), state.get('environment'))
+  !collidesWithBottomIfMovesDown(state) && !isOverlapping(currentPieceInGrid(nudgeDown(state)), state.get('environment'))
 var canMoveLeft = (state) =>
-  !collidesWithWallIfMovesLeft(state) && !isOverlapping(pieceInGrid(nudgeLeft(state)), state.get('environment'))
+  !collidesWithWallIfMovesLeft(state) && !isOverlapping(currentPieceInGrid(nudgeLeft(state)), state.get('environment'))
 var canMoveRight = (state) =>
-  !collidesWithWallIfMovesRight(state) && !isOverlapping(pieceInGrid(nudgeRight(state)), state.get('environment'))
+  !collidesWithWallIfMovesRight(state) && !isOverlapping(currentPieceInGrid(nudgeRight(state)), state.get('environment'))
 
 var nextPiece = (state) =>
   state
-    .set('environment', foldGrids(state.get('environment'), pieceInGrid(state)))
+    .set('environment', foldGrids(state.get('environment'), currentPieceInGrid(state)))
     .set('currentPiece', state.get('nextPieces').first().get('piece'))
     .set('pieceX', 3)
     .set('pieceY', 0)
@@ -141,13 +147,26 @@ var removeCompleteLines = function(state) {
 
 var gravity = Bacon.interval(1000, (state) => moveDown(state))
 
+var cycle = function(n, max, dir) {
+  if (n + dir < 0) {
+    return max
+  } else if (n + dir > max) {
+    return 0
+  } else {
+    return n + dir
+  }
+}
+
+var rotateRight = (state) => state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, 1))
+var rotateLeft = (state) => state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, -1))
+
 var actionStream = pressedInput("down").map(() => (state) => moveDown(state))
   .merge(pressedInput("left").map(() => (state) => moveLeft(state)))
   .merge(pressedInput("right").map(() => (state) => moveRight(state)))
   .merge(pressedInput("up").map(() => (state) => drop(state)))
+  .merge(pressedInput("z").map(() => (state) => rotateLeft(state)))
+  .merge(pressedInput("x").map(() => (state) => rotateRight(state)))
   .merge(gravity)
-  //.merge(pressedInput("z").map(function() { return { action: "ROTATE_PIECE_LEFT" } }))
-  //.merge(pressedInput("x").map(function() { return { action: "ROTATE_PIECE_RIGHT" } }))
 
 
 var nextTick = function(state, fn) {
