@@ -318,6 +318,7 @@ var holdPiece = function(state) {
       return state
         .set('holdPiece', currentPiece)
         .set('currentPiece', holdPiece)
+        .set('pieceRotation', 0)
     } else {
       return nextPiece(
         state
