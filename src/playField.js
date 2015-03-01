@@ -340,6 +340,21 @@ var holdPiece = function(state) {
   }
 }
 
+var holdPieceTries = List.of(
+  holdPiece,
+  composeMoves(nudgeRight, holdPiece),
+  composeMoves(nudgeLeft, holdPiece)
+)
+
+var holdPieceIfLegal = function(state) {
+  if (canMove(holdPieceTries, state)) {
+    return tryMoves(holdPieceTries, state)
+  } else {
+    return state
+  }
+}
+
+
 var tick = Bacon.interval(FRAME, (state) => gravity(state))
 
 var allActions = Bacon.mergeAll(
@@ -350,7 +365,7 @@ var allActions = Bacon.mergeAll(
   actionStream("up", drop),
   actionStream("z", rotateLeftIfLegal),
   actionStream("x", rotateRightIfLegal),
-  actionStream("d", holdPiece),
+  actionStream("d", holdPieceIfLegal),
   tick
 )
 
