@@ -284,15 +284,16 @@ var checkGameEnd = (state) =>
 var advanceLevel = function(state) {
   if (state.get('thisTick').get('pieceGotLocked')) {
     var current = state.get('level')
-
+    var completedLines = state.get('thisTick').get('completedLines')
+    var lineBonus = completedLines > 1 ? completedLines : 0
     if ((current + 1) % 100 == 0) {
-      if (state.get('thisTick').get('completedLines') > 0) {
-        return state.set('level', current + 1)
+      if (completedLines > 0) {
+        return state.set('level', current + 1 + lineBonus)
       } else {
         return state
       }
     } else {
-      return state.set('level', current + 1)
+      return state.set('level', current + 1 + lineBonus)
     }
   } else {
     return state
