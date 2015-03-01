@@ -77,16 +77,10 @@ var nonEmptyCellCoordinates = function(state) {
   })
 }
 
-var collidesWithBottomIfMovesDown = (state) => nonEmptyCellCoordinates(nudgeDown(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
-var collidesWithWallIfMovesLeft = (state) => nonEmptyCellCoordinates(nudgeLeft(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
-var collidesWithWallIfMovesRight = (state) => nonEmptyCellCoordinates(nudgeRight(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
+var moveIsOutOfBounds = (fn, state) => nonEmptyCellCoordinates(fn(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
 
-var canMoveDown = (state) =>
-  !collidesWithBottomIfMovesDown(state) && !isOverlapping(currentPieceInGrid(nudgeDown(state)), state.get('environment'))
-var canMoveLeft = (state) =>
-  !collidesWithWallIfMovesLeft(state) && !isOverlapping(currentPieceInGrid(nudgeLeft(state)), state.get('environment'))
-var canMoveRight = (state) =>
-  !collidesWithWallIfMovesRight(state) && !isOverlapping(currentPieceInGrid(nudgeRight(state)), state.get('environment'))
+var isLegalMove = (fn, state) =>
+  !moveIsOutOfBounds(fn, state) && !isOverlapping(currentPieceInGrid(fn(state)), state.get('environment'))
 
 var nextPiece = (state) =>
   state
@@ -100,10 +94,10 @@ var nextPiece = (state) =>
     ))
 
 var moveDown = function(state) {
-  if (collidesWithBottomIfMovesDown(state)) {
+  if (moveIsOutOfBounds(nudgeDown, state)) {
     return nextPiece(state)
   } else {
-    if (canMoveDown(state)) {
+    if (isLegalMove(nudgeDown, state)) {
       return nudgeDown(state)
     } else {
       return nextPiece(state)
@@ -112,21 +106,21 @@ var moveDown = function(state) {
 }
 
 var drop = function(state) {
-  while (canMoveDown(state)) {
+  while (isLegalMove(nudgeDown, state)) {
     state = nudgeDown(state)
   }
   return state
 }
 
 var moveLeft = function(state) {
-  if (canMoveLeft(state)) {
+  if (isLegalMove(nudgeLeft, state)) {
     return nudgeLeft(state)
   } else {
     return state
   }
 }
 var moveRight = function(state) {
-  if (canMoveRight(state)) {
+  if (isLegalMove(nudgeRight, state)) {
     return nudgeRight(state)
   } else {
     return state
