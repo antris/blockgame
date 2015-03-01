@@ -52,7 +52,8 @@ var initialState = Immutable.Map({
   pieceX: 0,
   pieceY: 0,
   lastGravity: now(),
-  lastLockReset: now()
+  lastLockReset: now(),
+  lastLock: now()
 })
 
 var foldGrids = (g1, g2) =>
@@ -76,33 +77,57 @@ var isOverlapping = (g1, g2) =>
 var withinBounds = (x, y) => x >= 0 && x < 10 && y >= 0 && y < 20
 
 var nonEmptyCellCoordinates = function(state) {
-  return state.get('currentPiece').get(state.get('pieceRotation')).flatMap(function(row, rowIndex) {
-    return row.flatMap((cell, cellIndex) => cell > 0 ? List.of(List.of(cellIndex + state.get('pieceX'), rowIndex + state.get('pieceY'))) : List.of())
-  })
+  if (state.get('currentPiece')) {
+    return state.get('currentPiece').get(state.get('pieceRotation')).flatMap(function(row, rowIndex) {
+      return row.flatMap((cell, cellIndex) => cell > 0 ? List.of(List.of(cellIndex + state.get('pieceX'), rowIndex + state.get('pieceY'))) : List.of())
+    })
+  } else {
+    return List.of()
+  }
 }
 
 var moveIsOutOfBounds = (fn, state) => nonEmptyCellCoordinates(fn(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
 
 var isLegalMove = (fn, state) =>
-  !moveIsOutOfBounds(fn, state) && !isOverlapping(currentPieceInGrid(fn(state)), state.get('environment'))
+  state.get('currentPiece') !== undefined
+    && !moveIsOutOfBounds(fn, state)
+    && !isOverlapping(currentPieceInGrid(fn(state)), state.get('environment'))
 
-var nextPiece = (state) =>
-  state
-    .set('environment', foldGrids(state.get('environment'), currentPieceInGrid(state)))
-    .set('currentPiece', state.get('nextPieces').first().get('piece'))
-    .set('pieceX', 3)
-    .set('pieceY', 0)
-    .set('pieceRotation', 0)
-    .set('nextPieces', state.get('nextPieces').slice(1).push(
-      Map({ piece: getRandomPiece(), nth: state.get('nextPieces').last().get('nth') + 1 })
-    ))
+var SPAWN_DELAY = 30
+
+var nextPiece = function(state) {
+  if (state.get('currentPiece') === undefined && framesSince(state.get('lastLock')) > SPAWN_DELAY) {
+    return state
+      .set('currentPiece', state.get('nextPieces').first().get('piece'))
+      .set('pieceX', 3)
+      .set('pieceY', 0)
+      .set('pieceRotation', 0)
+      .set('nextPieces', state.get('nextPieces').slice(1).push(
+        Map({ piece: getRandomPiece(), nth: state.get('nextPieces').last().get('nth') + 1 })
+      ))
+  } else {
+    return state
+  }
+}
+
+var lockPiece = function(state) {
+  var isLockedAlready = state.get('currentPiece') === undefined
+  if (isLockedAlready) {
+    return state
+  } else {
+    return state
+      .set('environment', foldGrids(state.get('environment'), currentPieceInGrid(state)))
+      .set('lastLock', now())
+      .set('currentPiece', undefined)
+  }
+}
 
 var gravityMoveDown = function(state) {
   if (isLegalMove(nudgeDown, state)) {
     return nudgeDown(state).set('lastLockReset', now())
   } else {
     if (framesSince(state.get('lastLockReset')) > 60) {
-      return nextPiece(state)
+      return lockPiece(state)
     } else {
       return state
     }
@@ -113,7 +138,7 @@ var playerMoveDown = function(state) {
   if (isLegalMove(nudgeDown, state)) {
     return nudgeDown(state).set('lastLockReset', now())
   } else {
-    return nextPiece(state)
+    return lockPiece(state)
   }
 }
 
@@ -219,6 +244,7 @@ var gravity = function(state) {
 var tick = Bacon.interval(FRAME, (state) => gravity(state))
 
 var allActions = Bacon.mergeAll(
+  inputStream.map((inputs) => (state) => state.set('inputs', inputs)),
   actionStream("down", playerMoveDown),
   actionStream("left", moveLeft),
   actionStream("right", moveRight),
@@ -234,6 +260,7 @@ var setLockingState = (state) =>
 var nextTick = function(state, fn) {
   var state = fn(state)
   state = removeCompleteLines(state)
+  state = nextPiece(state)
   state = setLockingState(state)
   return state
 }

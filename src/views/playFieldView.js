@@ -51,9 +51,13 @@ var merge = (p1, p2) =>
 var withinBounds = (x, y) => x >= 0 && x < 10 && y >= 0 && y < 20
 
 var nonEmptyCellCoordinates = function(state) {
-  return state.get('currentPiece').get(state.get('pieceRotation')).flatMap(function(row, rowIndex) {
-    return row.flatMap((cell, cellIndex) => cell > 0 ? List.of(List.of(cellIndex + state.get('pieceX'), rowIndex + state.get('pieceY'))) : List.of())
-  })
+  if (state.get('currentPiece')) {
+    return state.get('currentPiece').get(state.get('pieceRotation')).flatMap(function(row, rowIndex) {
+      return row.flatMap((cell, cellIndex) => cell > 0 ? List.of(List.of(cellIndex + state.get('pieceX'), rowIndex + state.get('pieceY'))) : List.of())
+    })
+  } else {
+    return List.of()
+  }
 }
 
 var setCell = (grid, x, y, cell) => grid.set(y, grid.get(y).set(x, cell))
