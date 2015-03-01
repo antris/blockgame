@@ -31,6 +31,8 @@ var Main = React.createClass({
       <PlayField world={world} />
       <p>History size: {this.props.history.size}</p>
       <p><input type="range" min="0" max={this.props.history.size} onChange={this.onSlide} ref="historySlider" /></p>
+      <div>Score: {world.get('score')}</div>
+      <div>Level: {world.get('level')}</div>
       <NextPiecesView pieces={world.get('nextPieces')} />
       <p>
         X = rotate right<br />

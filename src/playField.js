@@ -54,7 +54,9 @@ var initialState = Immutable.Map({
   lastGravity: now(),
   lastLockReset: now(),
   lastLock: now(),
-  hasEnded: false
+  hasEnded: false,
+  score: 0,
+  level: 0
 })
 
 var foldGrids = (g1, g2) =>
@@ -132,6 +134,7 @@ var lockPiece = function(state) {
       .set('environment', foldGrids(state.get('environment'), currentPieceInGrid(state)))
       .set('lastLock', now())
       .set('currentPiece', undefined)
+      .set('thisTick', state.get('thisTick').set('pieceGotLocked', true))
   }
 }
 
@@ -185,8 +188,13 @@ var pressedInput = (inputType) =>
 
 var removeCompleteLines = function(state) {
   var incompleteLines = state.get('environment').filter((row) => row.some((cell) => cell === 0))
-  var newEmptyLines = Immutable.Repeat(EMPTY_ROW, 20 - incompleteLines.size).toList()
-  return state.set('environment', newEmptyLines.concat(incompleteLines))
+  var completedLinesCount = 20 - incompleteLines.size
+  var newEmptyLines = Immutable.Repeat(EMPTY_ROW, completedLinesCount).toList()
+  var scoreToAdd = completedLinesCount * completedLinesCount * 10
+  return state
+    .set('environment', newEmptyLines.concat(incompleteLines))
+    .set('score', state.get('score') + scoreToAdd)
+    .set('thisTick', state.get('thisTick').set('completedLines', completedLinesCount))
 }
 var cycle = function(n, max, dir) {
   if (n + dir < 0) {
@@ -273,12 +281,33 @@ var setLockingState = (state) =>
 var checkGameEnd = (state) =>
   isOverlapping(state.get('environment'), currentPieceInGrid(state)) ? state.set('hasEnded', true) : state
 
+var advanceLevel = function(state) {
+  if (state.get('thisTick').get('pieceGotLocked')) {
+    var current = state.get('level')
 
-var nextTick = function(state, fn) {
-  var state = fn(state)
+    if ((current + 1) % 100 == 0) {
+      if (state.get('thisTick').get('completedLines') > 0) {
+        return state.set('level', current + 1)
+      } else {
+        return state
+      }
+    } else {
+      return state.set('level', current + 1)
+    }
+  } else {
+    return state
+  }
+}
+
+var resetTick = (state) => state.set('thisTick', Map({completedLines: 0}))
+
+var nextTick = function(state, action) {
+  state = resetTick(state)
+  state = action(state)
   state = removeCompleteLines(state)
   state = nextPiece(state)
   state = checkGameEnd(state)
+  state = advanceLevel(state)
   state = setLockingState(state)
   return state
 }
