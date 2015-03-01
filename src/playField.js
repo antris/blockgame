@@ -52,7 +52,7 @@ var initialState = Immutable.Map({
   pieceX: 0,
   pieceY: 0,
   lastGravity: now(),
-  lastMove: now()
+  lastLockReset: now()
 })
 
 var foldGrids = (g1, g2) =>
@@ -99,9 +99,13 @@ var nextPiece = (state) =>
 
 var moveDown = function(state) {
   if (isLegalMove(nudgeDown, state)) {
-    return nudgeDown(state)
+    return nudgeDown(state).set('lastLockReset', now())
   } else {
-    return nextPiece(state)
+    if (framesSince(state.get('lastLockReset')) > 60) {
+      return nextPiece(state)
+    } else {
+      return state
+    }
   }
 }
 
@@ -109,7 +113,7 @@ var drop = function(state) {
   while (isLegalMove(nudgeDown, state)) {
     state = nudgeDown(state)
   }
-  return state
+  return state.set('lastLockReset', now())
 }
 
 var moveLeft = function(state) {
@@ -162,23 +166,29 @@ var tryMoves = function(moves, state) {
   }
 }
 
-var rotateRightIfLegal = (state) =>
-  tryMoves(List.of(
-    rotateRight,
-    composeMoves(nudgeRight, rotateRight),
-    composeMoves(nudgeLeft, rotateRight)
-  ), state)
-var rotateLeftIfLegal = (state) =>
-  tryMoves(List.of(
-    rotateLeft,
-    composeMoves(nudgeRight, rotateLeft),
-    composeMoves(nudgeLeft, rotateLeft)
-  ), state)
+var canMove = (moves, state) => moves.find((move) => isLegalMove(move, state)) !== undefined
 
 var rotateRight = (state) =>
   state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, 1))
 var rotateLeft = (state) =>
   state.set('pieceRotation', cycle(state.get('pieceRotation'), state.get('currentPiece').size - 1, -1))
+
+var wallKickRight = List.of(
+  rotateRight,
+  composeMoves(nudgeRight, rotateRight),
+  composeMoves(nudgeLeft, rotateRight)
+)
+var wallKickLeft = List.of(
+  rotateLeft,
+  composeMoves(nudgeRight, rotateLeft),
+  composeMoves(nudgeLeft, rotateLeft)
+)
+
+var rotateRightIfLegal = (state) =>
+  canMove(wallKickRight, state) ? tryMoves(wallKickRight, state).set('lastLockReset', now()) : state
+var rotateLeftIfLegal = (state) =>
+  canMove(wallKickLeft, state) ? tryMoves(wallKickLeft, state).set('lastLockReset', now()) : state
+
 
 var actionStream = (inputType, fn) => pressedInput(inputType).map(() => (state) => fn(state))
 
@@ -188,8 +198,10 @@ var FRAME = 1000 / FPS
 
 var frames = (n) => n * FRAME
 
+var framesSince = (t) => (now() - t) / FRAME
+
 var gravity = function(state) {
-  if (now() - state.get('lastGravity') >= frames(30)) {
+  if (framesSince(state.get('lastGravity')) >= 30) {
     return moveDown(state.set('lastGravity', now()))
   } else {
     return state
