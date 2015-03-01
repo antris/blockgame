@@ -138,11 +138,61 @@ var lockPiece = function(state) {
   }
 }
 
+var getLockDelay = function(state) {
+  var level = state.get('level')
+  if (level < 100) {
+    return 60
+  } else if (level < 200) {
+    return 50
+  } else if (level < 300) {
+    return 40
+  } else if (level < 400) {
+    return 30
+  } else if (level < 500) {
+    return 25
+  } else if (level < 600) {
+    return 22
+  } else if (level < 700) {
+    return 19
+  } else if (level < 800) {
+    return 16
+  } else if (level < 900) {
+    return 13
+  } else {
+    return 11
+  }
+}
+
+var getGravityDelay = function(state) {
+  var level = state.get('level')
+  if (level < 100) {
+    return 30
+  } else if (level < 200) {
+    return 20
+  } else if (level < 300) {
+    return 15
+  } else if (level < 400) {
+    return 10
+  } else if (level < 500) {
+    return 6
+  } else if (level < 600) {
+    return 0
+  } else if (level < 700) {
+    return 0
+  } else if (level < 800) {
+    return 0
+  } else if (level < 900) {
+    return 0
+  } else {
+    return 0
+  }
+}
+
 var gravityMoveDown = function(state) {
   if (isLegalMove(nudgeDown, state)) {
     return nudgeDown(state).set('lastLockReset', now())
   } else {
-    if (framesSince(state.get('lastLockReset')) > 60) {
+    if (framesSince(state.get('lastLockReset')) > getLockDelay(state)) {
       return lockPiece(state)
     } else {
       return state
@@ -255,7 +305,7 @@ var frames = (n) => n * FRAME
 var framesSince = (t) => (now() - t) / FRAME
 
 var gravity = function(state) {
-  if (framesSince(state.get('lastGravity')) >= 30) {
+  if (framesSince(state.get('lastGravity')) >= getGravityDelay(state)) {
     return gravityMoveDown(state.set('lastGravity', now()))
   } else {
     return state
@@ -275,8 +325,7 @@ var allActions = Bacon.mergeAll(
   tick
 )
 
-var setLockingState = (state) =>
-  state.set('isLocking', !isLegalMove(nudgeDown, state))
+var setLockingState = (state) => state.set('isLocking', !isLegalMove(nudgeDown, state))
 
 var checkGameEnd = (state) =>
   isOverlapping(state.get('environment'), currentPieceInGrid(state)) ? state.set('hasEnded', true) : state
