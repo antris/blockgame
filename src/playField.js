@@ -42,13 +42,17 @@ var currentPieceInGrid = function(state) {
   return g
 }
 
+var now = () => new Date().getTime()
+
 var initialState = Immutable.Map({
   environment: EMPTY_GRID,
   currentPiece: initialStack.first().get('piece'),
   nextPieces: initialStack.slice(1),
   pieceRotation: 0,
   pieceX: 0,
-  pieceY: 0
+  pieceY: 0,
+  lastGravity: now(),
+  lastMove: now()
 })
 
 var foldGrids = (g1, g2) =>
@@ -134,9 +138,6 @@ var removeCompleteLines = function(state) {
   var newEmptyLines = Immutable.Repeat(EMPTY_ROW, 20 - incompleteLines.size).toList()
   return state.set('environment', newEmptyLines.concat(incompleteLines))
 }
-
-var gravity = Bacon.interval(1000, (state) => moveDown(state))
-
 var cycle = function(n, max, dir) {
   if (n + dir < 0) {
     return max
@@ -181,6 +182,22 @@ var rotateLeft = (state) =>
 
 var actionStream = (inputType, fn) => pressedInput(inputType).map(() => (state) => fn(state))
 
+var FPS = 60
+
+var FRAME = 1000 / FPS
+
+var frames = (n) => n * FRAME
+
+var gravity = function(state) {
+  if (now() - state.get('lastGravity') >= frames(30)) {
+    return moveDown(state.set('lastGravity', now()))
+  } else {
+    return state
+  }
+}
+
+var tick = Bacon.interval(FRAME, (state) => gravity(state))
+
 var allActions = Bacon.mergeAll(
   actionStream("down", moveDown),
   actionStream("left", moveLeft),
@@ -188,7 +205,7 @@ var allActions = Bacon.mergeAll(
   actionStream("up", drop),
   actionStream("z", rotateLeftIfLegal),
   actionStream("x", rotateRightIfLegal),
-  gravity
+  tick
 )
 
 var nextTick = function(state, fn) {
