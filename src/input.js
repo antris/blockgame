@@ -7,6 +7,7 @@ var RIGHT = 39
 var DOWN = 40
 var Z = 90
 var X = 88
+var D = 68
 
 var keyUps = Bacon.fromEventTarget(window, 'keyup')
 var keyDowns = Bacon.fromEventTarget(window, 'keydown')
@@ -26,9 +27,10 @@ var inputStream = Bacon.combineTemplate({
   left: isPressed(LEFT),
   right: isPressed(RIGHT),
   z: isPressed(Z),
-  x: isPressed(X)
+  x: isPressed(X),
+  d: isPressed(D)
 }).map(Immutable.Map)
 
-//keyDowns.onValue((x) => console.log(x))
+//keyDowns.map('.keyCode').onValue((x) => console.log(x))
 
 module.exports = inputStream

@@ -2,6 +2,7 @@ var React = require('react')
 var Immutable = require('immutable')
 var Bacon = require('baconjs')
 var NextPiecesView = require('./views/nextPiecesView')
+var Piece = require('./views/PieceView')
 var {worldStream} = require('./playField')
 var PlayField = require('./views/playFieldView')
 var input = require('./input')
@@ -28,6 +29,7 @@ var Main = React.createClass({
     var world = this.state.selectedWorldFromHistory ? this.state.selectedWorldFromHistory : this.props.world
 
     return <div>
+      <Piece piece={world.get('holdPiece')} />
       <PlayField world={world} />
       <p>History size: {this.props.history.size}</p>
       <p><input type="range" min="0" max={this.props.history.size} onChange={this.onSlide} ref="historySlider" /></p>
@@ -40,7 +42,8 @@ var Main = React.createClass({
         UP = drop piece<br />
         DOWN = nudge piece down<br />
         LEFT = move piece left<br />
-        RIGHT = move piece right
+        RIGHT = move piece right<br />
+        D = hold piece
       </p>
     </div>
   }

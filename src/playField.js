@@ -108,14 +108,15 @@ var initialRotation = function(state) {
   }
 }
 
+var startY = (piece) => piece === pieces.asMap.get('i') ? -1 : -2
+
 var nextPiece = function(state) {
   if (state.get('currentPiece') === undefined && framesSince(state.get('lastLock')) > SPAWN_DELAY) {
     var piece = state.get('nextPieces').first().get('piece')
-    var startY = piece === pieces.asMap.get('i') ? -1 : -2
     return state
       .set('currentPiece', piece)
       .set('pieceX', 3)
-      .set('pieceY', startY)
+      .set('pieceY', startY(piece))
       .set('pieceRotation', initialRotation(state))
       .set('nextPieces', state.get('nextPieces').slice(1).push(
         Map({ piece: getRandomPiece(), nth: state.get('nextPieces').last().get('nth') + 1 })
@@ -300,8 +301,6 @@ var FPS = 60
 
 var FRAME = 1000 / FPS
 
-var frames = (n) => n * FRAME
-
 var framesSince = (t) => (now() - t) / FRAME
 
 var gravity = function(state) {
@@ -309,6 +308,35 @@ var gravity = function(state) {
     return gravityMoveDown(state.set('lastGravity', now()))
   } else {
     return state
+  }
+}
+
+var holdPiece = function(state) {
+  var currentPiece = state.get('currentPiece')
+  var holdPiece = state.get('holdPiece')
+  if (currentPiece) {
+    if (holdPiece) {
+      return state
+        .set('holdPiece', currentPiece)
+        .set('currentPiece', holdPiece)
+    } else {
+      return nextPiece(
+        state
+          .set('holdPiece', currentPiece)
+          .set('currentPiece', undefined)
+      )
+    }
+  } else {
+    if (holdPiece) {
+      return state
+        .set('holdPiece', undefined)
+        .set('currentPiece', holdPiece)
+        .set('pieceX', 3)
+        .set('pieceY', startY(holdPiece))
+        .set('pieceRotation', 0)
+    } else {
+      return state
+    }
   }
 }
 
@@ -322,6 +350,7 @@ var allActions = Bacon.mergeAll(
   actionStream("up", drop),
   actionStream("z", rotateLeftIfLegal),
   actionStream("x", rotateRightIfLegal),
+  actionStream("d", holdPiece),
   tick
 )
 
