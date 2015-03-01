@@ -8,12 +8,15 @@ var DOWN = 40
 var Z = 90
 var X = 88
 
-var keyUps = Bacon.fromEventTarget(window, 'keyup').map('.keyCode')
-var keyDowns = Bacon.fromEventTarget(window, 'keydown').map('.keyCode')
+var keyUps = Bacon.fromEventTarget(window, 'keyup')
+var keyDowns = Bacon.fromEventTarget(window, 'keydown')
+
+keyDowns.filter((keyCode) => keyCode == DOWN || keyCode == UP).onValue((evt) => evt.preventDefault())
+keyUps.filter((keyCode) => keyCode == DOWN || keyCode == UP).onValue((evt) => evt.preventDefault())
 
 var isPressed = (keyCode) =>
-  keyDowns.filter((x) => x == keyCode).map(() => true)
-    .merge(keyUps.filter((x) => x == keyCode).map(() => false))
+  keyDowns.map('.keyCode').filter((x) => x == keyCode).map(() => true)
+    .merge(keyUps.map('.keyCode').filter((x) => x == keyCode).map(() => false))
     .toProperty(false)
     .skipDuplicates()
 

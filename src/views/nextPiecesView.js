@@ -1,10 +1,15 @@
 var React = require('react')
 var pieces = require('../pieces')
+var Cell = require('./cellView')
 
 var PieceView = React.createClass({
   render: function(){
-    var piece = this.props.piece
-    return <span className="pce">{pieces.toString(piece)}</span>
+    var rotations = this.props.piece
+
+    var view = rotations.get(0).map((row) =>
+      <div>{row.map((cell) => <Cell cellType={cell} size="10"></Cell>).toJS()}</div>
+    ).toJS()
+    return <div>{view}</div>
   }
 })
 
@@ -12,15 +17,15 @@ module.exports = React.createClass({
   render: function() {
     var nextPieces = this.props.pieces
     return <div>
-      <h2>Next pieces</h2>
-      <p>{
+      <strong>Next pieces</strong>
+      <div>{
         nextPieces
           .map(
             (piece) =>
               <PieceView piece={piece.get("piece")} key={piece.get("nth")} />
           )
           .toJS()
-      }</p>
+      }</div>
     </div>
   }
 })

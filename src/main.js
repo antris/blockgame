@@ -28,10 +28,18 @@ var Main = React.createClass({
     var world = this.state.selectedWorldFromHistory ? this.state.selectedWorldFromHistory : this.props.world
 
     return <div>
+      <PlayField world={world} />
       <p>History size: {this.props.history.size}</p>
       <p><input type="range" min="0" max={this.props.history.size} onChange={this.onSlide} ref="historySlider" /></p>
       <NextPiecesView pieces={world.get('nextPieces')} />
-      <PlayField world={world} />
+      <p>
+        X = rotate right<br />
+        Z = rotate left<br />
+        UP = drop piece<br />
+        DOWN = nudge piece down<br />
+        LEFT = move piece left<br />
+        RIGHT = move piece right
+      </p>
     </div>
   }
 })
