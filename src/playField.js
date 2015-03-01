@@ -25,8 +25,7 @@ var initialStack = Immutable.List.of(
   Map({piece: getRandomPiece(), nth: 1}),
   Map({piece: getRandomPiece(), nth: 2}),
   Map({piece: getRandomPiece(), nth: 3}),
-  Map({piece: getRandomPiece(), nth: 4}),
-  Map({piece: getRandomPiece(), nth: 5})
+  Map({piece: getRandomPiece(), nth: 4})
 )
 
 var currentPieceInGrid = function(state) {
@@ -46,7 +45,7 @@ var now = () => new Date().getTime()
 
 var initialState = Immutable.Map({
   environment: EMPTY_GRID,
-  currentPiece: initialStack.first().get('piece'),
+  currentPiece: undefined,
   nextPieces: initialStack.slice(1),
   pieceRotation: 0,
   pieceX: 0,
