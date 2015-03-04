@@ -1,23 +1,9 @@
 var React = require('react')
 var pieces = require('../pieces')
+var EMPTY_CELL = pieces.EMPTY_CELL
 
-var colors = {
-  0: 'black',
-  1: 'red',
-  2: 'yellow',
-  3: 'cyan',
-  4: 'magenta',
-  5: 'green',
-  6: 'lightblue',
-  7: 'orange',
-  8: 'darkred',
-  9: 'brown',
-  10: 'darkcyan',
-  11: 'purple',
-  12: 'darkgreen',
-  13: 'blue',
-  14: 'darkorange'
-}
+var getColor = (cell) =>
+  cell === EMPTY_CELL ? 'black' : cell.get('baseColor')
 
 var Cell = React.createClass({
   render: function(){
@@ -26,7 +12,7 @@ var Cell = React.createClass({
       display: "inline-block",
       width: size + "px",
       height: size + "px",
-      backgroundColor: this.props.cell === pieces.EMPTY_CELL ? 'black' : 'white'
+      backgroundColor: getColor(this.props.cell)
     }
     return <span style={style}></span>
   }
