@@ -229,12 +229,14 @@ var moveRight = function(state) {
     return state
   }
 }
+
+var isPressed = (inputType) => inputStream.map((inputs) => inputs.get(inputType))
 var pressedInput = (inputType) =>
-  inputStream
-    .map((inputs) => inputs.get(inputType))
+  isPressed(inputType)
     .toEventStream()
     .skipDuplicates()
     .filter((isPressed) => isPressed)
+
 
 var removeCompleteLines = function(state) {
   var incompleteLines = state.get('environment').filter((row) => row.some((cell) => cell === 0))
@@ -300,6 +302,8 @@ var FPS = 60
 
 var FRAME = 1000 / FPS
 
+var frames = (n) => n * FRAME
+
 var framesSince = (t) => (now() - t) / FRAME
 
 var gravity = function(state) {
@@ -357,12 +361,16 @@ var holdPieceIfLegal = function(state) {
 
 var tick = Bacon.interval(FRAME, (state) => gravity(state))
 
+var repeatWhenHolding = (stream) =>
+  stream.flatMapLatest((isPressed) =>
+    isPressed ? Bacon.once(true).merge(Bacon.interval(frames(3), true).delay(frames(16))) : Bacon.never()
+  )
 
 var allActions = Bacon.mergeAll(
   inputStream.map((inputs) => (state) => state.set('inputs', inputs)),
   actionStream("down", playerMoveDown),
-  actionStream("left", moveLeft),
-  actionStream("right", moveRight),
+  repeatWhenHolding(isPressed("left")).map(() => (state) => moveLeft(state)),
+  repeatWhenHolding(isPressed("right")).map(() => (state) => moveRight(state)),
   actionStream("up", drop),
   actionStream("z", rotateLeftIfLegal),
   actionStream("x", rotateRightIfLegal),
