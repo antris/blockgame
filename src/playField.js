@@ -230,11 +230,10 @@ var moveRight = function(state) {
   }
 }
 
-var isPressed = (inputType) => inputStream.map((inputs) => inputs.get(inputType))
+var isPressed = (inputType) => inputStream.map((inputs) => inputs.get(inputType)).skipDuplicates()
 var pressedInput = (inputType) =>
   isPressed(inputType)
     .toEventStream()
-    .skipDuplicates()
     .filter((isPressed) => isPressed)
 
 
