@@ -25,8 +25,7 @@ var initialStack = Immutable.List.of(
   Map({piece: getRandomPiece(), nth: 0}),
   Map({piece: getRandomPiece(), nth: 1}),
   Map({piece: getRandomPiece(), nth: 2}),
-  Map({piece: getRandomPiece(), nth: 3}),
-  Map({piece: getRandomPiece(), nth: 4})
+  Map({piece: getRandomPiece(), nth: 3})
 )
 
 var currentPieceInGrid = function(state) {
