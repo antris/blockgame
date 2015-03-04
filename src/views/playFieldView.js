@@ -29,7 +29,7 @@ var nonEmptyCellCoordinates = function(state) {
         Map({
           x: cellIndex + state.get('pieceX'),
           y: rowIndex + state.get('pieceY'),
-          cell
+          cell: cell.set('isLocking', state.get('isLocking'))
         })
       ) : List.of())
     })

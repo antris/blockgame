@@ -5,13 +5,34 @@ var EMPTY_CELL = Map()
 var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
 var EMPTY_GRID = Immutable.Repeat(EMPTY_ROW, 20).toList()
 
-var I_CELL = Map({baseColor: 'red'})
-var O_CELL = Map({baseColor: 'yellow'})
-var T_CELL = Map({baseColor: 'cyan'})
-var S_CELL = Map({baseColor: 'magenta'})
-var Z_CELL = Map({baseColor: 'green'})
-var J_CELL = Map({baseColor: 'lightblue'})
-var L_CELL = Map({baseColor: 'orange'})
+var I_CELL = Map({
+  baseColor: 'red',
+  lockingColor: 'darkred'
+})
+var O_CELL = Map({
+  baseColor: 'yellow',
+  lockingColor: 'brown'
+})
+var T_CELL = Map({
+  baseColor: 'cyan',
+  lockingColor: 'darkcyan'
+})
+var S_CELL = Map({
+  baseColor: 'magenta',
+  lockingColor: 'purple'
+})
+var Z_CELL = Map({
+  baseColor: 'green',
+  lockingColor: 'darkgreen'
+})
+var J_CELL = Map({
+  baseColor: 'lightblue',
+  lockingColor: 'blue'
+})
+var L_CELL = Map({
+  baseColor: 'orange',
+  lockingColor: 'brown'
+})
 
 
 var i = List.of(

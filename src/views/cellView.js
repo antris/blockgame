@@ -2,8 +2,17 @@ var React = require('react')
 var pieces = require('../pieces')
 var EMPTY_CELL = pieces.EMPTY_CELL
 
-var getColor = (cell) =>
-  cell === EMPTY_CELL ? 'black' : cell.get('baseColor')
+var getColor = function(cell) {
+  if (cell === EMPTY_CELL) {
+    return 'black'
+  } else {
+    if (cell.get('isLocking')) {
+      return cell.get('lockingColor')
+    } else {
+      return cell.get('baseColor')
+    }
+  }
+}
 
 var Cell = React.createClass({
   render: function(){
