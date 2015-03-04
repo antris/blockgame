@@ -8,6 +8,8 @@ var getColor = function(cell) {
   } else {
     if (cell.get('isLocking')) {
       return cell.get('lockingColor')
+    } else if (cell.get('isGhost')) {
+      return '#333'
     } else {
       return cell.get('baseColor')
     }

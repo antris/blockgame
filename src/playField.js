@@ -339,6 +339,20 @@ var setLockingState = (state) => state.set('isLocking', !isLegalMove(nudgeDown, 
 var checkGameEnd = (state) =>
   isOverlapping(state.get('environment'), currentPieceInGrid(state)) ? state.set('gameEnded', now()) : state
 
+var setGhostPiece = function (state) {
+  if (!state.get('currentPiece')) {
+    return state.set('ghostPiece', undefined)
+  } else {
+    var dropState = drop(state);
+    return state.set('ghostPiece', Map({
+      piece: dropState.get('currentPiece'),
+      x: dropState.get('pieceX'),
+      y: dropState.get('pieceY'),
+      rotation: dropState.get('pieceRotation')
+    }))
+  }
+}
+
 var advanceLevel = function(state) {
   if (state.get('thisTick').get('pieceGotLocked')) {
     var current = state.get('level')
@@ -371,6 +385,7 @@ var nextTick = function(state, [action, paused]) {
       state = checkGameEnd(state)
       state = advanceLevel(state)
       state = setLockingState(state)
+      state = setGhostPiece(state)
     }
   }
   return state

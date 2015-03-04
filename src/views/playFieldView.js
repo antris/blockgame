@@ -40,18 +40,45 @@ var nonEmptyCellCoordinates = function(state) {
 
 var setCell = (grid, x, y, cell) => grid.set(y, grid.get(y).set(x, cell))
 
+
+var putCell = function(grid, coords) {
+  var x = coords.get('x')
+  var y = coords.get('y')
+  if (y < 0) return grid
+  return grid.set(y, grid.get(y).set(x, coords.get('cell')))
+}
+
 var currentPieceInGrid = function(state) {
-  var putCell = function(grid, coords) {
-    var x = coords.get('x')
-    var y = coords.get('y')
-    if (y < 0) return grid
-    return grid.set(y, grid.get(y).set(x, coords.get('cell')))
-  }
+
   var cells = nonEmptyCellCoordinates(state)
   var g = cells
     .filter((coords) => withinBounds(coords.get('x'), coords.get('y')))
     .reduce(putCell, EMPTY_GRID)
   return g
+}
+
+var getCellCoordinatesForPiece = function(piece, rotation, x, y, isLocking, isGhost) {
+  if (!piece) {
+    return List.of()
+  } else {
+    return piece.get(rotation).flatMap(function(row, rowIndex) {
+      return row.flatMap((cell, cellIndex) => cell !== EMPTY_CELL ? List.of(
+        Map({
+          x: cellIndex + x,
+          y: rowIndex + y,
+          cell: cell.set('isLocking', isLocking).set('isGhost', isGhost)
+        })
+      ) : List.of())
+    })
+  }
+}
+
+var pieceInGrid = function(piece, rotation, x, y, isLocking, isGhost) {
+  var coords = getCellCoordinatesForPiece(piece, rotation, x, y, isLocking, isGhost)
+  var grid2 = coords
+    .filter((c) => withinBounds(c.get('x'), c.get('y')))
+    .reduce(putCell, EMPTY_GRID)
+  return grid2
 }
 
 module.exports = React.createClass({
@@ -72,8 +99,23 @@ module.exports = React.createClass({
 
     var shouldShowCell = (cell, rowIndex) => world.get('paused') ? EMPTY_CELL : hideAnimation(cell, rowIndex)
 
+    var ghostPiece = world.get('ghostPiece')
+
+    var ghostGrid;
+
+    if (ghostPiece) {
+      ghostGrid = pieceInGrid(ghostPiece.get('piece'), ghostPiece.get('rotation'), ghostPiece.get('x'), ghostPiece.get('y'), false, true)
+    } else {
+      ghostGrid = EMPTY_GRID
+    }
+
+    var grid = merge(
+      merge(currentPieceInGrid(world), world.get('environment')),
+      ghostGrid
+    )
+
     return <div style={style}>
-      {merge(currentPieceInGrid(world), world.get('environment')).map((row, rowIndex) =>
+      {grid.map((row, rowIndex) =>
         <div>
         {
           row.map(function(cell) {
