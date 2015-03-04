@@ -361,6 +361,8 @@ var holdPieceIfLegal = function(state) {
 
 var tick = Bacon.interval(FRAME, (state) => gravity(state))
 
+var debug = function(state) { console.log(state.toJS()); return state }
+
 var repeatWhenHolding = (stream) =>
   stream.flatMapLatest((isPressed) =>
     isPressed ? Bacon.once(true).merge(Bacon.interval(frames(3), true).delay(frames(16))) : Bacon.never()
@@ -375,6 +377,7 @@ var allActions = Bacon.mergeAll(
   actionStream("z", rotateLeftIfLegal),
   actionStream("x", rotateRightIfLegal),
   actionStream("d", holdPieceIfLegal),
+  actionStream("m", debug),
   tick
 )
 
