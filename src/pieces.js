@@ -1,142 +1,153 @@
 var Immutable = require('immutable')
-var {List} = Immutable
+var {List, Map} = Immutable
+
+var EMPTY_CELL = Map()
+var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
+var EMPTY_GRID = Immutable.Repeat(EMPTY_ROW, 20).toList()
+
+var I_CELL = Map({baseColor: 'red'})
+var O_CELL = Map({baseColor: 'yellow'})
+var T_CELL = Map({baseColor: 'cyan'})
+var S_CELL = Map({baseColor: 'magenta'})
+var Z_CELL = Map({baseColor: 'green'})
+var J_CELL = Map({baseColor: 'lightblue'})
+var L_CELL = Map({baseColor: 'orange'})
+
 
 var i = List.of(
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(1, 1, 1, 1),
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(I_CELL, I_CELL, I_CELL, I_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 1, 0),
-    List.of(0, 0, 1, 0),
-    List.of(0, 0, 1, 0),
-    List.of(0, 0, 1, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, I_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, I_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, I_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, I_CELL, EMPTY_CELL)
   )
 )
 var o = List.of(
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(0, 2, 2, 0),
-    List.of(0, 2, 2, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, O_CELL, O_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, O_CELL, O_CELL, EMPTY_CELL)
   )
 )
 var t = List.of(
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(0, 3, 0, 0),
-    List.of(3, 3, 3, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, T_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(T_CELL, T_CELL, T_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 3, 0, 0),
-    List.of(0, 3, 3, 0),
-    List.of(0, 3, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, T_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, T_CELL, T_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, T_CELL, EMPTY_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(3, 3, 3, 0),
-    List.of(0, 3, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(T_CELL, T_CELL, T_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, T_CELL, EMPTY_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 3, 0, 0),
-    List.of(3, 3, 0, 0),
-    List.of(0, 3, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, T_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(T_CELL, T_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, T_CELL, EMPTY_CELL, EMPTY_CELL)
   )
 )
 var s = List.of(
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(0, 4, 4, 0),
-    List.of(4, 4, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, S_CELL, S_CELL, EMPTY_CELL),
+    List.of(S_CELL, S_CELL, EMPTY_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(4, 0, 0, 0),
-    List.of(4, 4, 0, 0),
-    List.of(0, 4, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(S_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(S_CELL, S_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, S_CELL, EMPTY_CELL, EMPTY_CELL)
   )
 )
 var z = List.of(
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(5, 5, 0, 0),
-    List.of(0, 5, 5, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(Z_CELL, Z_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, Z_CELL, Z_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 5, 0),
-    List.of(0, 5, 5, 0),
-    List.of(0, 5, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, Z_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, Z_CELL, Z_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, Z_CELL, EMPTY_CELL, EMPTY_CELL)
   )
 )
 var j = List.of(
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(6, 6, 6, 0),
-    List.of(0, 0, 6, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(J_CELL, J_CELL, J_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, J_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 6, 0, 0),
-    List.of(0, 6, 0, 0),
-    List.of(6, 6, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, J_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, J_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(J_CELL, J_CELL, EMPTY_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(6, 0, 0, 0),
-    List.of(6, 6, 6, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(J_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(J_CELL, J_CELL, J_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(6, 6, 0, 0),
-    List.of(6, 0, 0, 0),
-    List.of(6, 0, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(J_CELL, J_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(J_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(J_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL)
   )
 )
 var l = List.of(
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(7, 7, 7, 0),
-    List.of(7, 0, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(L_CELL, L_CELL, L_CELL, EMPTY_CELL),
+    List.of(L_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(7, 7, 0, 0),
-    List.of(0, 7, 0, 0),
-    List.of(0, 7, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(L_CELL, L_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, L_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, L_CELL, EMPTY_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 7, 0),
-    List.of(7, 7, 7, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, L_CELL, EMPTY_CELL),
+    List.of(L_CELL, L_CELL, L_CELL, EMPTY_CELL)
   ),
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(7, 0, 0, 0),
-    List.of(7, 0, 0, 0),
-    List.of(7, 7, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(L_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(L_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(L_CELL, L_CELL, EMPTY_CELL, EMPTY_CELL)
   )
 )
 var asMap = Immutable.Map({ i, o, t, s, z, j, l })
 
 var asList = List.of(i, o, t, s, z, j, l)
 
-var colors = Immutable.Map().set(i, 1).set(o, 2).set(t, 3).set(s, 4).set(z, 5).set(j, 6).set(l, 7)
-
 var toString = function(piece) {
-  return asMap.keyOf(asList.find((p) => p == piece)).toUpperCase()
+  return asMap.keyOf(piece).toUpperCase()
 }
 
-module.exports = { asMap, asList, toString, colors }
+module.exports = { asMap, asList, toString, EMPTY_CELL, EMPTY_GRID, EMPTY_ROW }

@@ -3,9 +3,7 @@ var Bacon = require('baconjs')
 var {List, Map} = Immutable
 var pieces = require('./pieces')
 var inputStream = require('./input')
-var EMPTY_CELL = 0
-var EMPTY_ROW = Immutable.Repeat(EMPTY_CELL, 10).toList()
-var EMPTY_GRID = Immutable.Repeat(EMPTY_ROW, 20).toList()
+var {EMPTY_CELL, EMPTY_GRID, EMPTY_ROW} = pieces
 var {getLockDelay, getGravityDelay} = require('./levelData')
 
 var toString = function(playField) {
@@ -30,14 +28,14 @@ var initialStack = Immutable.List.of(
 
 var currentPieceInGrid = function(state) {
   var putCell = function(grid, coords) {
-    var x = coords.get(0)
-    var y = coords.get(1)
+    var x = coords.get('x')
+    var y = coords.get('y')
     if (y < 0) return grid
-    return grid.set(y, grid.get(y).set(x, pieces.colors.get(state.get('currentPiece'))))
+    return grid.set(y, grid.get(y).set(x, coords.get('cell')))
   }
   var cells = nonEmptyCellCoordinates(state)
   var g = cells
-    .filter((coords) => withinBounds(coords.get(0), coords.get(1)))
+    .filter((coords) => withinBounds(coords.get('x'), coords.get('y')))
     .reduce(putCell, EMPTY_GRID)
   return g
 }
@@ -61,7 +59,7 @@ var initialState = Immutable.Map({
 var foldGrids = (g1, g2) =>
   g1.map((row, rowIndex) =>
       row.map((cell, cellIndex) =>
-          Math.max(cell, g2.get(rowIndex).get(cellIndex))
+          cell === EMPTY_CELL ? g2.get(rowIndex).get(cellIndex) : cell
       )
   )
 
@@ -72,7 +70,7 @@ var nudgeLeft = (state) => state.set('pieceX', state.get('pieceX') - 1)
 var isOverlapping = (g1, g2) =>
   g1.find((row, rowIndex) =>
     row.find((cell, cellIndex) =>
-      cell > 0 && g2.get(rowIndex).get(cellIndex) > 0
+      cell !== EMPTY_CELL && g2.get(rowIndex).get(cellIndex) !== EMPTY_CELL
     )
   ) !== undefined
 
@@ -81,14 +79,20 @@ var withinBounds = (x, y) => x >= 0 && x < 10 && y < 20
 var nonEmptyCellCoordinates = function(state) {
   if (state.get('currentPiece')) {
     return state.get('currentPiece').get(state.get('pieceRotation')).flatMap(function(row, rowIndex) {
-      return row.flatMap((cell, cellIndex) => cell > 0 ? List.of(List.of(cellIndex + state.get('pieceX'), rowIndex + state.get('pieceY'))) : List.of())
+      return row.flatMap((cell, cellIndex) => cell !== EMPTY_CELL ? List.of(
+        Map({
+          x: cellIndex + state.get('pieceX'),
+          y: rowIndex + state.get('pieceY'),
+          cell
+        })
+      ) : List.of())
     })
   } else {
     return List.of()
   }
 }
 
-var moveIsOutOfBounds = (fn, state) => nonEmptyCellCoordinates(fn(state)).some((coords) => !withinBounds(coords.get(0), coords.get(1)))
+var moveIsOutOfBounds = (fn, state) => nonEmptyCellCoordinates(fn(state)).some((coords) => !withinBounds(coords.get('x'), coords.get('y')))
 
 var isLegalMove = (fn, state) =>
   state.get('currentPiece') !== undefined
@@ -188,7 +192,7 @@ var pressedInput = (inputType) =>
 
 
 var removeCompleteLines = function(state) {
-  var incompleteLines = state.get('environment').filter((row) => row.some((cell) => cell === 0))
+  var incompleteLines = state.get('environment').filter((row) => row.some((cell) => cell === EMPTY_CELL))
   var completedLinesCount = 20 - incompleteLines.size
   var newEmptyLines = Immutable.Repeat(EMPTY_ROW, completedLinesCount).toList()
   var scoreToAdd = completedLinesCount * completedLinesCount * 10

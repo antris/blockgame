@@ -1,12 +1,13 @@
 var React = require('react')
 var Cell = require('./cellView')
 var {List} = require('immutable')
+var {EMPTY_CELL} = require('../pieces')
 var EMPTY_PIECE = List.of(
   List.of(
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0),
-    List.of(0, 0, 0, 0)
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL),
+    List.of(EMPTY_CELL, EMPTY_CELL, EMPTY_CELL, EMPTY_CELL)
   )
 )
 var Piece = React.createClass({
@@ -14,7 +15,7 @@ var Piece = React.createClass({
     var rotations = this.props && this.props.piece || EMPTY_PIECE
 
     var view = rotations.get(0).map((row) =>
-        <div>{row.map((cell) => <Cell cellType={cell} size="10"></Cell>).toJS()}</div>
+        <div>{row.map((cell) => <Cell cell={cell} size="10"></Cell>).toJS()}</div>
     ).toJS()
     return <div>{view}</div>
   }

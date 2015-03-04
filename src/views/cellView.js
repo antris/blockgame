@@ -26,7 +26,7 @@ var Cell = React.createClass({
       display: "inline-block",
       width: size + "px",
       height: size + "px",
-      backgroundColor: colors[this.props.cellType]
+      backgroundColor: this.props.cell === pieces.EMPTY_CELL ? 'black' : 'white'
     }
     return <span style={style}></span>
   }
