@@ -318,14 +318,14 @@ var debug = function(state) { console.log(state.toJS()); return state }
 
 var repeatWhenHolding = (stream) =>
   stream.flatMapLatest((isPressed) =>
-    isPressed ? Bacon.once(true).merge(Bacon.interval(frames(3), true).delay(frames(16))) : Bacon.never()
+    isPressed ? Bacon.once(true).merge(Bacon.interval(frames(1), true).delay(frames(10))) : Bacon.never()
   )
 
 var allActions = Bacon.mergeAll(
   inputStream.map((inputs) => (state) => state.set('inputs', inputs)),
   actionStream("down", playerMoveDown),
-  repeatWhenHolding(isPressed("left")).map(() => (state) => moveLeft(state)),
-  repeatWhenHolding(isPressed("right")).map(() => (state) => moveRight(state)),
+  repeatWhenHolding(isPressed("left").and(isPressed("right").not())).map(() => (state) => moveLeft(state)),
+  repeatWhenHolding(isPressed("right").and(isPressed("left").not())).map(() => (state) => moveRight(state)),
   actionStream("up", drop),
   actionStream("z", rotateLeftIfLegal),
   actionStream("x", rotateRightIfLegal),
