@@ -66,5 +66,5 @@ var Initializer = React.createClass({
 
 React.render(
   <Initializer worldStreamWithHistory={worldStreamWithHistory} />,
-  document.getElementById('main')
+  document.body
 )
