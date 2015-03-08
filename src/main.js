@@ -3,11 +3,13 @@ var Immutable = require('immutable')
 var Bacon = require('baconjs')
 var NextPiecesView = require('./views/nextPiecesView')
 var Piece = require('./views/PieceView')
-var {worldStream} = require('./playField')
-var PlayField = require('./views/playFieldView')
+var {newGame} = require('./playField')
+var {PlayField, restartStream} = require('./views/playFieldView')
 var input = require('./input')
 
 var history = Immutable.List.of()
+
+var worldStream = Bacon.once(true).merge(restartStream).flatMapLatest(() => newGame())
 
 var worldStreamWithHistory = worldStream.map(Immutable.Map).map(function(world) {
   history = history.push(world)

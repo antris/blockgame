@@ -57,6 +57,17 @@ var currentPieceInGrid = function(state) {
 var now = () => new Date().getTime()
 
 var initialState = Immutable.Map({
+  inputs: Map({
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+    z: false,
+    x: false,
+    d: false,
+    p: false,
+    m: false
+  }),
   environment: EMPTY_GRID,
   currentPiece: undefined,
   nextPieces: pieceQueue,
@@ -410,8 +421,7 @@ var paused = Bacon.update(false,
   [pressedInput('p')], (prev) => !prev
 )
 
-var tick = Bacon.combineAsArray(allActions, paused).scan(initialState, nextTick)
 
 module.exports = {
-  worldStream: tick
+  newGame: () => Bacon.combineAsArray(allActions, paused).scan(initialState, nextTick)
 }

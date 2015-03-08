@@ -3,6 +3,7 @@ var {List, Map} = require('immutable')
 var pieces = require('../pieces')
 var {EMPTY_CELL, EMPTY_GRID} = pieces
 var Cell = require('./cellView')
+var Bacon = require('baconjs')
 
 var toString = function(playField) {
   var s = '';
@@ -81,7 +82,9 @@ var pieceInGrid = function(piece, rotation, x, y, isLocking, isGhost) {
   return grid2
 }
 
-module.exports = React.createClass({
+var restarts = new Bacon.Bus()
+
+var PlayField = React.createClass({
   render: function() {
     var world = this.props.world
     var style = {
@@ -90,9 +93,11 @@ module.exports = React.createClass({
       float: 'left',
       marginRight: '20px'
     }
+    var gameEnded = world.get('gameEnded')
+    var timeSinceEnd = new Date().getTime() - gameEnded
     var hideAnimation = function(cell, rowIndex) {
-      if (world.get('gameEnded')) {
-        if (new Date().getTime() - world.get('gameEnded') > (20 - rowIndex) * 80) {
+      if (gameEnded) {
+        if (timeSinceEnd > (20 - rowIndex) * 80) {
           return EMPTY_CELL
         } else {
           return cell
@@ -119,16 +124,34 @@ module.exports = React.createClass({
       ghostGrid
     )
 
+    var buttonStyle = {
+      display: gameEnded && timeSinceEnd > 1680 ? 'block' : 'none',
+      margin: '170px auto',
+      cursor: 'pointer',
+      lineHeight: '40px',
+      width: '200px',
+      background: '#333',
+      textAlign: 'center',
+      position: 'absolute'
+    }
+
+    var restart = function() { restarts.push(true) }
+
     return <div style={style}>
-      {grid.map((row, rowIndex) =>
-        <div>
-        {
-          row.map(function(cell) {
-            return <Cell cell={shouldShowCell(cell, rowIndex)} />
-          }).toJS()
-        }
-        </div>
-      ).toJS()}
+      <div style={buttonStyle} onClick={restart}>Restart</div>
+      <div>
+        {grid.map((row, rowIndex) =>
+            <div>
+          {
+            row.map(function(cell) {
+              return <Cell cell={shouldShowCell(cell, rowIndex)} />
+            }).toJS()
+            }
+            </div>
+        ).toJS()}
+      </div>
     </div>
   }
 })
+
+module.exports = { PlayField, restartStream: restarts.toEventStream() }
