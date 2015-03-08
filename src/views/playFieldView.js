@@ -3,6 +3,7 @@ var {List, Map} = require('immutable')
 var pieces = require('../pieces')
 var {EMPTY_CELL, EMPTY_GRID} = pieces
 var Cell = require('./cellView')
+var PureRenderMixin = require('react/addons').addons.PureRenderMixin
 
 var toString = function(playField) {
   var s = '';
@@ -82,11 +83,12 @@ var pieceInGrid = function(piece, rotation, x, y, isLocking, isGhost) {
 }
 
 module.exports = React.createClass({
+  mixins: [PureRenderMixin],
   render: function() {
     var world = this.props.world
     var style = {
       border: '10px solid #43494A',
-      paddingTop: '20px',
+      marginTop: '20px',
       float: 'left',
       marginRight: '20px'
     }
