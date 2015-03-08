@@ -17,14 +17,28 @@ var toString = function(playField) {
   return s
 }
 
-var getRandomPiece = () => pieces.asList.get(Math.random() * pieces.asList.size)
+var randomFromList = (list) => list.get(Math.random() * list.size)
 
-var initialStack = Immutable.List.of(
-  Map({piece: getRandomPiece(), nth: 0}),
-  Map({piece: getRandomPiece(), nth: 1}),
-  Map({piece: getRandomPiece(), nth: 2}),
-  Map({piece: getRandomPiece(), nth: 3})
-)
+var getRandomPiece = () => randomFromList(pieces.asList)
+var getFirstPiece = () => randomFromList(pieces.asList.delete(1).delete(3).delete(4))
+
+var getNextPiece = function(prev, nth) {
+  var history = prev.slice(-4).map((x) => x.get('piece'))
+  var i = 0;
+  var piece;
+  while (i < 6) {
+    piece = getRandomPiece()
+    if (!history.contains(piece)) {
+      break;
+    }
+    i++;
+  }
+  return prev.concat(List.of(Map({ piece, nth })))
+}
+
+var pieceQueue = Immutable.Range(1, Infinity)
+  .take(2)
+  .reduce(getNextPiece, List.of(Map({ piece: getFirstPiece(), nth: 0 })))
 
 var currentPieceInGrid = function(state) {
   var putCell = function(grid, coords) {
@@ -45,7 +59,8 @@ var now = () => new Date().getTime()
 var initialState = Immutable.Map({
   environment: EMPTY_GRID,
   currentPiece: undefined,
-  nextPieces: initialStack.slice(1),
+  nextPieces: pieceQueue,
+  pieceHistory: pieceQueue,
   pieceRotation: 0,
   pieceX: 0,
   pieceY: 0,
@@ -116,14 +131,14 @@ var startY = (piece) => piece === pieces.asMap.get('i') ? -1 : -2
 var nextPiece = function(state) {
   if (state.get('currentPiece') === undefined && framesSince(state.get('lastLock')) > SPAWN_DELAY) {
     var piece = state.get('nextPieces').first().get('piece')
+    var newRandomPiece = getNextPiece(state.get('pieceHistory'), state.get('pieceHistory').last().get('nth') + 1).last()
     return state
       .set('currentPiece', piece)
       .set('pieceX', 3)
       .set('pieceY', startY(piece))
       .set('pieceRotation', initialRotation(state))
-      .set('nextPieces', state.get('nextPieces').slice(1).push(
-        Map({ piece: getRandomPiece(), nth: state.get('nextPieces').last().get('nth') + 1 })
-      ))
+      .update('nextPieces', (pieces) => pieces.slice(1).push(newRandomPiece))
+      .update('pieceHistory', (hist) => hist.slice(1).push(newRandomPiece))
   } else {
     return state
   }
